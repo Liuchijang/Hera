@@ -36,9 +36,6 @@ The output is text based in the following format for each binding:
         Filter: <filter name><filter listener details>
 ```
 
-# Contact
-David Pany - Mandiant (FireEye) - 2017
+# Reference
+[WMI_Forensics](https://github.com/davidpany/WMI_Forensics) (David Pany - Mandiant (FireEye) - 2017)
 
-Twitter: @DavidPany
-
-Please send  comments, bug reports, and questions to @DavidPany or push changes directly to GitHub
