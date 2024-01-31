@@ -2,7 +2,8 @@ from report_form import report_form
 from collection import (
         computerName, 
         platform, 
-        installTime, 
+        installTime,
+        localTimeZone, 
         ipAddr, 
         runAsUser, 
         adminRights, 
@@ -15,7 +16,8 @@ if __name__ == "__main__":
         report_form( 
                 computerName, 
                 platform, 
-                installTime, 
+                installTime,
+                localTimeZone, 
                 ipAddr, 
                 runAsUser, 
                 adminRights, 

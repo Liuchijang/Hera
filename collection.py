@@ -4,7 +4,10 @@ import platform
 import datetime
 import random
 import string
-from datetime import datetime, timedelta
+from datetime import datetime
+import pytz
+from tzlocal import get_localzone
+
 
 def get_computer_name():
     return socket.gethostname()
@@ -14,7 +17,13 @@ def get_platform():
 
 def get_install_time():
     return datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
-    # return datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
+
+def get_local_TimeZone():
+    now = datetime.now()
+    timezone_name = str(get_localzone())
+    timezone = pytz.timezone(timezone_name)
+    gmt_offset = int(timezone.utcoffset(now).total_seconds() // 3600)
+    return timezone_name + " GMT+" + str(gmt_offset)
 
 def get_ip_address():
     return socket.gethostbyname(socket.gethostname())
@@ -41,6 +50,7 @@ def get_scanID(seed=hash(get_start_time()) & 0xFFFFFFFFFFFFFFFF):
 computerName = get_computer_name()
 platform = get_platform()
 installTime = get_install_time()
+localTimeZone = get_local_TimeZone()
 ipAddr = get_ip_address()
 runAsUser = get_run_as_user()
 adminRights = has_admin_rights()

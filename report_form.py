@@ -1,7 +1,8 @@
 def report_form(
             computerName, 
             platform, 
-            installTime, 
+            installTime,
+            localTimeZone, 
             ipAddr, 
             runAsUser, 
             adminRights, 
@@ -61,6 +62,10 @@ def report_form(
                     <td>{}</td>
                 </tr>
                 <tr>
+                    <td>Local Timezone</td>
+                    <td>{}</td>
+                </tr>
+                <tr>
                     <td>IP Addresses</td>
                     <td>{}</td>
                 </tr>
@@ -92,7 +97,8 @@ def report_form(
     """.format(
             computerName, 
             platform, 
-            installTime, 
+            installTime,
+            localTimeZone, 
             ipAddr, 
             runAsUser, 
             adminRights, 
