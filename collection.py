@@ -1,5 +1,6 @@
 import os
 import subprocess
+import ctypes
 import socket
 import psutil
 import platform
@@ -9,7 +10,6 @@ import string
 from datetime import datetime
 import pytz
 from tzlocal import get_localzone
-
 
 def get_computer_name():
     return socket.gethostname()
@@ -34,7 +34,11 @@ def get_run_as_user():
     return psutil.Process().username()
 
 def has_admin_rights():
-    return psutil.WINDOWS and psutil.win_service_get("wuauserv") is not None
+    try:
+        is_admin = (os.getuid() == 0)
+    except AttributeError:
+        is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+    return is_admin
 
 def get_start_time():
     return datetime.fromtimestamp(psutil.Process().create_time()).strftime("%Y-%m-%d %H:%M:%S")
