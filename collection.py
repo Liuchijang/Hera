@@ -1,3 +1,5 @@
+import os
+import subprocess
 import socket
 import psutil
 import platform
@@ -46,6 +48,39 @@ def get_scanID(seed=hash(get_start_time()) & 0xFFFFFFFFFFFFFFFF):
     random_string = ''.join(random.choice(characters) for _ in range(10))    
     return get_computer_name() + "_" + random_string
 
+def create_sysinfo_file(message, command, file_name):
+    try:
+        print(message)
+        result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
+        with open(os.path.join(systeminfor_folder, file_name), 'w') as file:
+            file.write(result)
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing {command}: {e}")
+
+def collect_system_info(message_list, command_list, file_list):
+    for message, command, file in zip(message_list, command_list, file_list):
+        create_sysinfo_file(message, command, file)  
+
+message_list = [
+    "Collecting installed softwares...",
+    "Collecting ip config...",
+    "Collecting sevices...",
+    "Collecting system information..."
+]
+
+command_list = [
+    "powershell \"Get-ItemProperty HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Format-Table -AutoSize | Out-String -Width 4096\"",
+    "ipconfig /all",
+    "powershell \"Get-Service | Sort-Object Status -Descending | Format-Table -AutoSize\"",
+    "systeminfo"
+]
+
+file_list = [
+    "installed_software.txt",
+    "ipconfig.txt",
+    "services.txt",
+    "systeminfo.txt"
+]
 
 computerName = get_computer_name()
 platform = get_platform()
@@ -57,4 +92,4 @@ adminRights = has_admin_rights()
 startTime = get_start_time()
 endTime = get_end_time()
 scanID = get_scanID()
-
+systeminfor_folder = computerName + "_systeminfor"
