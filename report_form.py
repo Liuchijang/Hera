@@ -101,7 +101,8 @@ def report_form(
             scanID
         )
 
-    with open("REPORT.html", "w") as html_file:
+    report_file = scanID + ".html"
+    with open(report_file, "w") as html_file:
         html_file.write(html_content)
 
-    print("Done!!! Report is saved in REPORT.html")
+    print("Done!!! Report is saved in" + report_file)
