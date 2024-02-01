@@ -7,7 +7,6 @@ import platform
 import datetime
 import random
 import string
-import shutil
 import re
 from datetime import datetime
 import pytz
