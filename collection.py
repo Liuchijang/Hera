@@ -134,7 +134,7 @@ file_artifact = [
     "Windows\\system32\\wbem\\Repository\\OBJECTS.DATA",
     "Windows\\system32\\wbem\\Repository\\FS\\OBJECTS.DATA"
     ]
-current_directory = os.getcwd()
+
 
 computerName = get_computer_name()
 platform = get_platform()
@@ -148,5 +148,6 @@ endTime = get_end_time()
 scanID = get_scanID()
 systeminfor_folder = computerName + "_systeminfor"
 shadow_id = create_vss()
+current_directory = os.getcwd()
 for file in file_artifact:
-    copy_locked_file_from_latest_vss(shadow_id,file,"E:\\test\\Export")
+    copy_locked_file_from_latest_vss(shadow_id,file,current_directory)
