@@ -1,4 +1,16 @@
-
+def report_form(
+            computerName, 
+            platform, 
+            installTime,
+            localTimeZone, 
+            ipAddr, 
+            runAsUser, 
+            adminRights, 
+            startTime, 
+            endTime,
+            scanID
+            ):
+    html_content = """
     <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -7,19 +19,19 @@
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Report Form</title>
             <style>
-                table {
+                table {{
                     border-collapse: collapse;
                     width: 50%;
                     margin-top: 20px;
-                }
-                th, td {
+                }}
+                th, td {{
                     border: 1px solid #dddddd;
                     text-align: left;
                     padding: 8px;
-                }
-                th {
+                }}
+                th {{
                     background-color: #f2f2f2;
-                }
+                }}
             </style>
         </head>
         <body>
@@ -39,47 +51,64 @@
                 </tr>
                 <tr>
                     <td>Computer Name</td>
-                    <td>Friday</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>Platform</td>
-                    <td>Windows-10-10.0.19045-SP0</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>Install Time</td>
-                    <td>2024-01-21 12:08:35</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>Local Timezone</td>
-                    <td>Asia/Bangkok GMT+7</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>IP Addresses</td>
-                    <td>172.18.176.1</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>Run as user</td>
-                    <td>FRIDAY\liujang</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>Admin rights</td>
-                    <td>True</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>Start Time</td>
-                    <td>2024-01-31 16:16:02</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>End Time</td>
-                    <td>2024-01-31 16:16:06</td>
+                    <td>{}</td>
                 </tr>
                 <tr>
                     <td>Scan ID</td>
-                    <td>Friday_6Ww5bjS4GN</td>
+                    <td>{}</td>
                 </tr>
 
                 <!-- More -->
             </table>
         </body>
         </html>
-    
+    """.format(
+            computerName, 
+            platform, 
+            installTime,
+            localTimeZone, 
+            ipAddr, 
+            runAsUser, 
+            adminRights, 
+            startTime, 
+            endTime,
+            scanID
+        )
+
+    report_file = scanID + ".html"
+    with open(report_file, "w") as html_file:
+        html_file.write(html_content)
+
+    print("Done!!! Report is saved in " + report_file)

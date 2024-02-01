@@ -1,3 +1,6 @@
+import sys
+sys.path.append('./config_ui')
+
 import os
 import subprocess
 import socket
@@ -9,7 +12,7 @@ import string
 from datetime import datetime
 import pytz
 from tzlocal import get_localzone
-
+from config_ui.process_bar import process_bar
 
 def get_computer_name():
     return socket.gethostname()
@@ -48,9 +51,10 @@ def get_scanID(seed=hash(get_start_time()) & 0xFFFFFFFFFFFFFFFF):
     random_string = ''.join(random.choice(characters) for _ in range(10))    
     return get_computer_name() + "_" + random_string
 
-def create_sysinfo_file(message, command, file_name):
+@process_bar
+def create_sysinfo_file(command, file_name):
     try:
-        print(message)
+        # print(message)
         result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
         with open(os.path.join(systeminfor_folder, file_name), 'w') as file:
             file.write(result)
@@ -59,7 +63,8 @@ def create_sysinfo_file(message, command, file_name):
 
 def collect_system_info(message_list, command_list, file_list):
     for message, command, file in zip(message_list, command_list, file_list):
-        create_sysinfo_file(message, command, file)  
+        print(message)       
+        create_sysinfo_file(command, file)
 
 message_list = [
     "Collecting installed softwares...",
