@@ -1,15 +1,16 @@
 import os
 import subprocess
+import ctypes
 import socket
 import psutil
 import platform
 import datetime
 import random
 import string
+import re
 from datetime import datetime
 import pytz
 from tzlocal import get_localzone
-
 
 def get_computer_name():
     return socket.gethostname()
@@ -34,7 +35,11 @@ def get_run_as_user():
     return psutil.Process().username()
 
 def has_admin_rights():
-    return psutil.WINDOWS and psutil.win_service_get("wuauserv") is not None
+    try:
+        is_admin = (os.getuid() == 0)
+    except AttributeError:
+        is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+    return is_admin
 
 def get_start_time():
     return datetime.fromtimestamp(psutil.Process().create_time()).strftime("%Y-%m-%d %H:%M:%S")
@@ -61,6 +66,47 @@ def collect_system_info(message_list, command_list, file_list):
     for message, command, file in zip(message_list, command_list, file_list):
         create_sysinfo_file(message, command, file)  
 
+def create_vss():
+    volume_path = "C:\\"
+    powershell_command = f'powershell.exe -Command "Invoke-CimMethod -MethodName Create -ClassName Win32_ShadowCopy -Arguments @{{ Volume= \'{volume_path}\' }}"'
+    try:
+        result = subprocess.run(powershell_command, shell=True, check=True, capture_output=True, text=True)
+        print("Volume Shadow Copy created successfully.")
+        pattern = r"\{(.*?)\}"
+        shadow_id_match = re.search(pattern, result.stdout)
+        if shadow_id_match:
+            shadow_id = shadow_id_match.group(1)  # Access the captured value
+            print("Extracted ShadowID:", shadow_id)
+            return "{"+shadow_id+"}"
+    except subprocess.CalledProcessError as e:
+        print(f"Error creating Volume Shadow Copy: {e}")
+
+def list_vss_shadows(shadow_id):
+    """Lists available VSS shadows using the 'vssadmin list shadows' command."""
+    command = f'cmd.exe /c "vssadmin list shadows /shadow={shadow_id}"'
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        vss_output = result.stdout
+        return vss_output
+    except subprocess.CalledProcessError as error:
+        print("Error listing VSS shadows:", error)
+    
+def copy_locked_file_from_latest_vss(shadow_id, file_path,des_path):
+    """Copies a file from the latest VSS shadow to the destination directory."""
+    vss_output = list_vss_shadows(shadow_id)
+    filename = file_path.split("\\")[-1]
+    if vss_output:
+        latest_vss_guid = re.search(r"Shadow Copy Volume: (\\\\.*?)\n", vss_output).group(1)
+        source_path = f"{latest_vss_guid}\\{file_path}"
+        try:
+            command = f'cmd.exe /c "copy {source_path} {des_path}\\{filename}" '
+            subprocess.run(command, shell=True, check=True)
+            print(f"File copied successfully from VSS shadow: {source_path} to {des_path}\\{filename}")
+        except Exception as error:
+            print("Error copying file:", error)
+    else:
+        print("Failed to retrieve VSS information.")
+
 message_list = [
     "Collecting installed softwares...",
     "Collecting ip config...",
@@ -81,6 +127,14 @@ file_list = [
     "services.txt",
     "systeminfo.txt"
 ]
+file_artifact = [
+    "Windows\\system32\\config\\SYSTEM",
+    "Windows\\system32\\config\\SOFTWARE",
+    "Users\\Admin\\AppData\\Roaming\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt",
+    "Windows\\system32\\wbem\\Repository\\OBJECTS.DATA",
+    "Windows\\system32\\wbem\\Repository\\FS\\OBJECTS.DATA"
+    ]
+
 
 computerName = get_computer_name()
 platform = get_platform()
@@ -93,3 +147,7 @@ startTime = get_start_time()
 endTime = get_end_time()
 scanID = get_scanID()
 systeminfor_folder = computerName + "_systeminfor"
+shadow_id = create_vss()
+current_directory = os.getcwd()
+for file in file_artifact:
+    copy_locked_file_from_latest_vss(shadow_id,file,current_directory)
