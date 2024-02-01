@@ -1,5 +1,8 @@
+import sys
+sys.path.append('./config_ui')
+
 import os
-from report_form import report_form
+from config_ui.report_form import report_form
 from collection import *
 # from collection import (
 #         computerName, 
