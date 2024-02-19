@@ -58,102 +58,21 @@ def get_scanID(seed=hash(get_start_time()) & 0xFFFFFFFFFFFFFFFF):
     random_string = ''.join(random.choice(characters) for _ in range(10))    
     return get_computer_name() + "_" + random_string
 
-@process_bar
-def create_sysinfo_file(command, file_name):
+# @process_bar
+def create_sysinfo_file(command, file_name, verbose):
     try:
         # print(message)
         result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
+        if verbose: print(result)
         with open(os.path.join(systeminfor_folder, file_name), 'w') as file:
             file.write(result)
     except subprocess.CalledProcessError as e:
         print(f"Error executing {command}: {e}")
 
-def collect_system_info(message_list, command_list, file_list):
+def collect_system_info(message_list, command_list, file_list, verbose):
     for message, command, file in zip(message_list, command_list, file_list):
         print(message)       
-        create_sysinfo_file(command, file)
-
-def create_vss():
-    volume_path = "C:\\"
-    powershell_command = f'powershell.exe -Command "Invoke-CimMethod -MethodName Create -ClassName Win32_ShadowCopy -Arguments @{{ Volume= \'{volume_path}\' }}"'
-    try:
-        result = subprocess.run(powershell_command, shell=True, check=True, capture_output=True, text=True)
-        print("Volume Shadow Copy created successfully.")
-        pattern = r"\{(.*?)\}"
-        shadow_id_match = re.search(pattern, result.stdout)
-        if shadow_id_match:
-            shadow_id = shadow_id_match.group(1)  # Access the captured value
-            print("Extracted ShadowID:", shadow_id)
-            return "{"+shadow_id+"}"
-    except subprocess.CalledProcessError as e:
-        print(f"Error creating Volume Shadow Copy: {e}")
-
-def list_vss_shadows(shadow_id):
-    """Lists available VSS shadows using the 'vssadmin list shadows' command."""
-    command = f'cmd.exe /c "vssadmin list shadows /shadow={shadow_id}"'
-    try:
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
-        vss_output = result.stdout
-        return vss_output
-    except subprocess.CalledProcessError as error:
-        print("Error listing VSS shadows:", error)
-    
-def copy_locked_file_from_latest_vss(shadow_id, file_path,des_path):
-    """Copies a file from the latest VSS shadow to the destination directory."""
-    vss_output = list_vss_shadows(shadow_id)
-    filename = file_path.split("\\")[-1]
-    if vss_output:
-        latest_vss_guid = re.search(r"Shadow Copy Volume: (\\\\.*?)\n", vss_output).group(1)
-        source_path = f"{latest_vss_guid}\\{file_path}"
-        try:
-            command = f'cmd.exe /c "copy {source_path} {des_path}\\{filename}" '
-            subprocess.run(command, shell=True, check=True)
-            print(f"File copied successfully from VSS shadow: {source_path} to {des_path}\\{filename}")
-        except Exception as error:
-            print("Error copying file:", error)
-    else:
-        print("Failed to retrieve VSS information.")
-
-def create_vss():
-    volume_path = "C:\\"
-    powershell_command = f'powershell.exe -Command "Invoke-CimMethod -MethodName Create -ClassName Win32_ShadowCopy -Arguments @{{ Volume= \'{volume_path}\' }}"'
-    try:
-        result = subprocess.run(powershell_command, shell=True, check=True, capture_output=True, text=True)
-        print("Volume Shadow Copy created successfully.")
-        pattern = r"\{(.*?)\}"
-        shadow_id_match = re.search(pattern, result.stdout)
-        if shadow_id_match:
-            shadow_id = shadow_id_match.group(1)  # Access the captured value
-            print("Extracted ShadowID:", shadow_id)
-            return "{"+shadow_id+"}"
-    except subprocess.CalledProcessError as e:
-        print(f"Error creating Volume Shadow Copy: {e}")
-
-def list_vss_shadows(shadow_id):
-    """Lists available VSS shadows using the 'vssadmin list shadows' command."""
-    command = f'cmd.exe /c "vssadmin list shadows /shadow={shadow_id}"'
-    try:
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
-        vss_output = result.stdout
-        return vss_output
-    except subprocess.CalledProcessError as error:
-        print("Error listing VSS shadows:", error)
-    
-def copy_locked_file_from_latest_vss(shadow_id, file_path,des_path):
-    """Copies a file from the latest VSS shadow to the destination directory."""
-    vss_output = list_vss_shadows(shadow_id)
-    filename = file_path.split("\\")[-1]
-    if vss_output:
-        latest_vss_guid = re.search(r"Shadow Copy Volume: (\\\\.*?)\n", vss_output).group(1)
-        source_path = f"{latest_vss_guid}\\{file_path}"
-        try:
-            command = f'cmd.exe /c "copy {source_path} {des_path}\\{filename}" '
-            subprocess.run(command, shell=True, check=True)
-            print(f"File copied successfully from VSS shadow: {source_path} to {des_path}\\{filename}")
-        except Exception as error:
-            print("Error copying file:", error)
-    else:
-        print("Failed to retrieve VSS information.")
+        create_sysinfo_file(command, file, verbose)
 
 message_list = [
     "Collecting installed softwares...",
@@ -198,7 +117,3 @@ scanID = get_scanID()
 
 systeminfor_folder = computerName + "_systeminfor"
 
-shadow_id = create_vss()
-current_directory = os.getcwd()
-for file in file_artifact:
-    copy_locked_file_from_latest_vss(shadow_id,file,current_directory)
