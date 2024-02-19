@@ -2,7 +2,32 @@ import subprocess
 import os
 import re
 import shutil
+import psutil
 import json
+from datetime import datetime
+from tzlocal import get_localzone
+import pytz
+import socket
+import uuid
+from config_ui.report_form import report_form
+
+
+
+def get_local_TimeZone():
+    now = datetime.now()
+    timezone_name = str(get_localzone())
+    timezone = pytz.timezone(timezone_name)
+    gmt_offset = int(timezone.utcoffset(now).total_seconds() // 3600)
+    return timezone_name + " GMT+" + str(gmt_offset)
+
+def get_ip_address():
+    return socket.gethostbyname(socket.gethostname())
+
+def get_run_as_user():
+    return psutil.Process().username()
+
+def get_start_time():
+    return datetime.fromtimestamp(psutil.Process().create_time()).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 def create_new_folder(baseFolder, newFoldername):
     folderPath = os.path.join(baseFolder,newFoldername)
@@ -25,7 +50,7 @@ def create_new_file(filename, filepath, data):
 
 def Run_velociraptor_ls(accessor, filePath, verbose=False):
      # Path to executable of Velociraptor on Windows
-    velociraptor_executable = r"velociraptor-v0.7.1-1-windows-amd64.exe"
+    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
     command = [velociraptor_executable, 'fs', '--accessor', accessor, 'ls', filePath]
     try:
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -37,7 +62,7 @@ def Run_velociraptor_ls(accessor, filePath, verbose=False):
 
 def Run_velociraptor_query(query, verbose=False):
     # Path to executable of Velociraptor on Windows
-    velociraptor_executable = r".\\velociraptor-v0.7.1-1-windows-amd64.exe"
+    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
     command = [velociraptor_executable, 'query', query, '--format', 'json']
     try:
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -80,6 +105,42 @@ def collect_evtx_file(outputFolder):
             source = os.path.join(os.getcwd(),filename)
             shutil.move(source, dest)
 
-cwd = os.getcwd()
-extractFolder = create_new_folder(cwd, "extract")
-collect_evtx_file(extractFolder)
+def collect_system_info():
+    data = Run_velociraptor_query("SELECT * From info()")
+    # print(data)
+    data = json.loads(data)
+    return data
+
+def get_scanID():   
+    return computerName + "_" + str(uuid.uuid4())
+
+def create_report():
+    endTime = datetime.now()
+    report_form( 
+            computerName, 
+            platform, 
+            installTime,
+            localTimeZone, 
+            ipAddr, 
+            runAsUser, 
+            adminRights, 
+            startTime, 
+            endTime,
+            scanID
+    )
+
+data = collect_system_info()
+computerName = data[0]["Hostname"]
+installTime = str(datetime.utcfromtimestamp(data[0]["BootTime"]))
+platform = data[0]["Platform"] + " " + data[0]["PlatformFamily"] + " " + data[0]["PlatformVersion"]
+adminRights = data[0]["IsAdmin"]
+startTime = get_start_time()
+localTimeZone = get_local_TimeZone()
+ipAddr = get_ip_address()
+runAsUser = get_run_as_user()
+scanID = get_scanID()
+
+# cwd = os.getcwd()
+# extractFolder = create_new_folder(cwd, "extract")
+# collect_evtx_file(extractFolder)
+
