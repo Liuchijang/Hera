@@ -10,6 +10,7 @@ import pytz
 import socket
 import uuid
 from config_ui.report_form import report_form
+from velociraptor_sever_api import Run_velociraptor_query
 
 
 
@@ -48,29 +49,29 @@ def create_new_file(filename, filepath, data):
     except IOError as e:
         print(f"Error creating file: {e}")
 
-def Run_velociraptor_ls(accessor, filePath, verbose=False):
-     # Path to executable of Velociraptor on Windows
-    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-    command = [velociraptor_executable, 'fs', '--accessor', accessor, 'ls', filePath]
-    try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        if verbose:
-            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e.output}")
+# def Run_velociraptor_ls(accessor, filePath, verbose=False):
+#      # Path to executable of Velociraptor on Windows
+#     velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
+#     command = [velociraptor_executable, 'fs', '--accessor', accessor, 'ls', filePath]
+#     try:
+#         result = subprocess.run(command, shell=True, capture_output=True, text=True)
+#         if verbose:
+#             print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
+#         return result.stdout
+#     except subprocess.CalledProcessError as e:
+#         print(f"Error: {e.output}")
 
-def Run_velociraptor_query(query, verbose=False):
-    # Path to executable of Velociraptor on Windows
-    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-    command = [velociraptor_executable, 'query', query, '--format', 'json']
-    try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        if verbose:
-            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e.output}")
+# def Run_velociraptor_query(query, verbose=False):
+#     # Path to executable of Velociraptor on Windows
+#     velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
+#     command = [velociraptor_executable, 'query', query, '--format', 'json']
+#     try:
+#         result = subprocess.run(command, shell=True, capture_output=True, text=True)
+#         if verbose:
+#             print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
+#         return result.stdout
+#     except subprocess.CalledProcessError as e:
+#         print(f"Error: {e.output}")
 
 def extract_base_folder(path):
     components = path.split("\\")
@@ -108,7 +109,7 @@ def collect_evtx_file(outputFolder):
 def collect_system_info():
     data = Run_velociraptor_query("SELECT * From info()")
     # print(data)
-    data = json.loads(data)
+    data = eval(data)
     return data
 
 def get_scanID():   
