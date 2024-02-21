@@ -72,6 +72,18 @@ def Run_velociraptor_query(query, verbose=False):
     except subprocess.CalledProcessError as e:
         print(f"Error: {e.output}")
 
+def Run_velociraptor_query_csv_format(query, verbose=False):
+    # Path to executable of Velociraptor on Windows
+    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
+    command = [velociraptor_executable, 'query', query, '--format', 'csv']
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if verbose:
+            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e.output}")
+
 def Run_velociraptor_artifacts(artifacts_name,verbose=False):
     # Path to executable of Velociraptor on Windows
     velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
@@ -148,6 +160,9 @@ def get_installed_software():
     data = json.loads(data)
     return data
 
+def get_ip_config_all():
+    data = Run_velociraptor_query_csv_format("SELECT Stdout FROM execve(argv=['powershell.exe', '/c', 'ipconfig /all'])")
+    return data
 
 data = collect_system_info()
 computerName = data[0]["Hostname"]
