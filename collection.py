@@ -73,6 +73,32 @@ def create_new_file(filename, filepath, data):
 #     except subprocess.CalledProcessError as e:
 #         print(f"Error: {e.output}")
 
+def Run_velociraptor_query_csv_format(query, verbose=False):
+    # Path to executable of Velociraptor on Windows
+    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
+    command = [velociraptor_executable, 'query', query, '--format', 'csv']
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if verbose:
+            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e.output}")
+
+def Run_velociraptor_artifacts(artifacts_name,verbose=False):
+    # Path to executable of Velociraptor on Windows
+    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
+    command = [velociraptor_executable, 'artifacts collect', artifacts_name, '--format', 'json']
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if verbose:
+            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e.output}")
+
+
+
 def extract_base_folder(path):
     components = path.split("\\")
     base_folder = components[:-1]
@@ -130,6 +156,15 @@ def create_report():
             scanID
     )
 
+def get_installed_software():
+    data = Run_velociraptor_artifacts("Windows.Sys.Programs")
+    data = json.loads(data)
+    return data
+
+def get_ip_config_all():
+    data = Run_velociraptor_query_csv_format("SELECT Stdout FROM execve(argv=['powershell.exe', '/c', 'ipconfig /all'])")
+    return data
+
 data = collect_system_info()
 computerName = data[0]["Hostname"]
 installTime = str(datetime.utcfromtimestamp(data[0]["BootTime"]))
@@ -140,7 +175,8 @@ localTimeZone = get_local_TimeZone()
 ipAddr = get_ip_address()
 runAsUser = get_run_as_user()
 scanID = get_scanID()
-
+installed_software = get_installed_software()
+ipconfig_all = get_ip_config_all()
 # cwd = os.getcwd()
 # extractFolder = create_new_folder(cwd, "extract")
 # collect_evtx_file(extractFolder)
