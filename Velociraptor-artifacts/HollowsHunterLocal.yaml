@@ -1,0 +1,41 @@
+name: Windows.Memory.LocalHollowsHunter
+description: |
+   Use hollows_hunter to detect suspicious process injections.
+
+   Upload any findings to the server, including process dumps.
+
+tools:
+ - name: hollows_hunter
+   github_project: hasherezade/hollows_hunter
+   github_asset_regex: hollows_hunter64.exe
+   serve_locally: true
+
+precondition:
+   SELECT OS From info() where OS = 'windows'
+   
+sources:
+  - name: Output
+    query: |
+      -- Get the path to the hollows_hunter tool.\
+
+      LET binaries <= SELECT dirname(path=Exe) + '\\hollows_hunter64.exe' as HLabsolutePath, dirname(path=Exe) as curDir
+        FROM pslist(pid=getpid())
+      LET HollowsHunterExe <= str(str=binaries[0].HLabsolutePath)
+      LET HollowsHunterOutput <= str(str=binaries[0].curDir) + '\\HollowsHunter-Output'
+      LET ResultFile <= str(str=binaries[0].curDir) + '\\summary.json'
+      -- Run the tool and relay back the output, as well as upload all the files from the tempdir.
+      SELECT *
+      FROM execve(argv=[HollowsHunterExe,"/hooks",
+           "/json", "/dir", HollowsHunterOutput], sep="\n")
+      
+           
+  - name: Summary
+    query: |
+      SELECT '----------------------------------Hollow Hunter Summary-------------------------------------' FROM info()
+      LET LookupPid(pid) = SELECT Name, CommandLine, Exe FROM pslist(pid=pid)
+
+      SELECT *, LookupPid(pid=pid)[0] AS ProcessInfo
+      FROM foreach(row=parse_json(
+            data=read_file(filename=ResultFile)).suspicious)  
+            
+
