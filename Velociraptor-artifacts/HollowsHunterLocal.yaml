@@ -18,7 +18,7 @@ sources:
     query: |
       -- Get the path to the hollows_hunter tool.\
 
-      LET binaries <= SELECT dirname(path=Exe) + '\\hollows_hunter64.exe' as HLabsolutePath, dirname(path=Exe) as curDir
+      LET binaries <= SELECT dirname(path=Exe) + '\\tools\\hollows_hunter64.exe' as HLabsolutePath, dirname(path=Exe) as curDir
         FROM pslist(pid=getpid())
       LET HollowsHunterExe <= str(str=binaries[0].HLabsolutePath)
       LET HollowsHunterOutput <= str(str=binaries[0].curDir) + '\\HollowsHunter-Output'
