@@ -1,0 +1,151 @@
+name: Windows.EventLogs.LocalHayabusa
+description: |
+   [Hayabusa](https://github.com/Yamato-Security/hayabusa) is a
+   Windows event log fast forensics timeline generator and threat
+   hunting tool.
+
+   This artifact runs Hayabusa on the endpoint against the specified
+   Windows event log directory, and generates and uploads a single CSV/JSONL
+   file for further analysis with excel, timeline explorer, elastic
+   stack, jq, etc.
+
+author: Eric Capuano - @eric_capuano, Whitney Champion - @shortxstack, Zach Mathis - @yamatosecurity
+
+tools:
+ - name: Hayabusa-2.13.0
+   url: https://github.com/Yamato-Security/hayabusa/releases/download/v2.13.0/hayabusa-2.13.0-win-x64.zip
+   expected_hash: c350ba83ffb02391115d2d5e1236a6a1cd79e9c49be8296f485819e7b20be8fa
+   version: 2.13.0
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+ - name: UTC
+   description: "Output time in UTC format"
+   type: bool
+   default: Y
+ - name: UpdateRules
+   description: "Update rules before scanning"
+   type: bool
+   default: N
+ - name: NoisyRules
+   description: "Enable rules marked as noisy"
+   type: bool
+   default: N
+ - name: OutputFormat
+   description: "Choose the format of the result file"
+   default: csv
+   type: choices
+   choices:
+     - csv
+     - jsonl
+ - name: OutputProfile
+   description: "Decide how much data you want back"
+   default: standard
+   type: choices
+   choices:
+     - minimal
+     - standard
+     - verbose
+     - all-field-info
+     - all-field-info-verbose
+     - super-verbose
+     - timesketch-minimal
+     - timesketch-verbose
+ - name: EIDFilter
+   description: "Scan only common Event IDs for quicker scans"
+   type: bool
+   default: N
+ - name: MinimalLevel
+   description: "Minimum level for rules"
+   default: informational
+   type: choices
+   choices:
+     - informational
+     - low
+     - medium
+     - high
+     - critical
+ - name: Threads
+   description: "Number of threads"
+   type: int
+   default: 2
+ - name: TimelineOffset
+   description: "Scan recent events based on an offset (ex: 1y, 3M, 30d, 24h, 30m)"
+ - name: TimelineStart
+   description: "Start time of the event logs to load (ex: '2020-02-22 00:00:00 +09:00')"
+ - name: TimelineEnd
+   description: "End time of the event logs to load (ex: '2022-02-22 23:59:59 +09:00')"
+ - name: ExcludeCategory
+   description: "Do not load rules with specified logsource categories (ex: process_creation,pipe_created)"
+ - name: ExcludeEID
+   description: "Do not scan specific EIDs for faster speed (ex: 1) (ex: 1,4688)"
+ - name: ExcludeStatus
+   description: "Do not load rules according to status (ex: experimental) (ex: stable,test)"
+ - name: ExcludeTag
+   description: "Do not load rules with specific tags (ex: sysmon)"
+ - name: IncludeCategory
+   description: "Only load rules with specified logsource categories (ex: process_creation,pipe_created)"
+ - name: IncludeEID
+   description: "Scan only specified EIDs for faster speed (ex: 1) (ex: 1,4688)"
+ - name: IncludeTag
+   description: "Only load rules with specific tags (ex: attack.execution,attack.discovery)"
+
+sources:
+ - name: Upload
+   query: |
+        LET OSPath <= SELECT dirname(path=Exe) + '\\hayabusa-2.13.0-win-x64.exe' as HYabsolutePath, dirname(path=Exe) as curDir
+        FROM pslist(pid=getpid())
+        LET ResultFile <= str(str=OSPath[0].curDir) + '\\hayabusa-results.' + OutputFormat
+        LET HayabusaExe <= str(str=OSPath[0].HYabsolutePath)
+        LET CurrentDir <= str(str=OSPath[0].curDir)
+        LET LogsPath <= str(str=OSPath[0].curDir) + '\\extract'
+
+
+        -- Optionally update the rules
+        LET _ <= if(condition=UpdateRules, then={
+        SELECT * FROM execve(argv=['cmd.exe', '/c', 'cd', CurrentDir, '&', HayabusaExe, 'update-rules']) })
+
+        LET HayabusaCmd <= if(condition=OutputFormat = "csv", then="csv-timeline", else="json-timeline")
+
+        -- Build the command line considering all options
+        -- If it does not match if(condition...), it returns Null, so remove Null with filter(....regex=".+")
+        LET cmdline <= filter(list=(
+          HayabusaExe, HayabusaCmd, "--directory", LogsPath,
+          "--no-wizard", 
+          "--output", ResultFile,
+          "--min-level", MinimalLevel,
+          "--profile", OutputProfile,
+          "--quiet", "--no-summary",
+          "--threads", str(str=Threads),
+          if(condition=OutputFormat = "jsonl", then="-L"),
+          if(condition=UTC, then="--UTC"),
+          if(condition=NoisyRules, then="--enable-noisy-rules"),
+          if(condition=EIDFilter, then="--eid-filter"),
+          if(condition=TimelineOffset, then="--timeline-offset"),   if(condition=TimelineOffset, then=TimelineOffset),
+          if(condition=TimelineStart, then="--timeline-start"),     if(condition=TimelineStart, then=TimelineStart),
+          if(condition=TimelineEnd, then="--timeline-end"),         if(condition=TimelineEnd, then=TimelineEnd),
+          if(condition=ExcludeCategory, then="--exclude-category"), if(condition=ExcludeCategory, then=ExcludeCategory),
+          if(condition=ExcludeEID, then="--exclude-eid"),           if(condition=ExcludeEID, then=ExcludeEID),
+          if(condition=ExcludeStatus, then="--exclude-status"),     if(condition=ExcludeStatus, then=ExcludeStatus),
+          if(condition=ExcludeTag, then="--exclude-tag"),           if(condition=ExcludeTag, then=ExcludeTag),
+          if(condition=IncludeCategory, then="--include-category"), if(condition=IncludeCategory, then=IncludeCategory),
+          if(condition=IncludeEID, then="--include-eid"),           if(condition=IncludeEID, then=IncludeEID),
+          if(condition=IncludeTag, then="--include-tag"),           if(condition=IncludeTag, then=IncludeTag),
+        ), regex=".+")
+
+        -- Run the tool and divert messages to logs.
+        LET ExecHB <= SELECT *
+        FROM execve(argv=cmdline, sep="\n", length=9999999)
+        WHERE log(message=Stdout)
+
+        -- Upload the raw file.
+        SELECT upload(file=ResultFile) AS Uploads FROM scope()
+
+ - name: Results
+   query: |
+        LET CSV_RESULT  = SELECT * FROM parse_csv(filename=ResultFile)
+        LET JSONL_RESULT = SELECT * FROM parse_jsonl(filename=ResultFile)
+        
+        SELECT *, timestamp(string=Timestamp) AS EventTime
+        FROM if(condition= OutputFormat = "csv", then=CSV_RESULT, else=JSONL_RESULT)
