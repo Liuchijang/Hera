@@ -9,7 +9,7 @@ from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
 
-def run(config, query, verbose):
+def run(config, query):
     creds = grpc.ssl_channel_credentials(
         root_certificates=config["ca_certificate"].encode("utf8"),
         private_key=config["client_private_key"].encode("utf8"),
@@ -46,5 +46,6 @@ def run(config, query, verbose):
 def Run_velociraptor_query(query, verbose=False):
 
     config = pyvelociraptor.LoadConfigFile("./config/api.config.yaml")
-    data = run(config, query, verbose)
+    data = run(config, query)
+    if verbose: print(data)
     return data

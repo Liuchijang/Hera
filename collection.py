@@ -12,7 +12,15 @@ import uuid
 from config_ui.report_form import report_form
 from velociraptor_sever_api import Run_velociraptor_query
 
-
+computerName = ""
+platform = ""
+installTime = ""
+localTimeZone = ""
+ipAddr = ""
+runAsUser = ""
+adminRights = ""
+startTime = ""
+scanID = ""
 
 def get_local_TimeZone():
     now = datetime.now()
@@ -149,7 +157,24 @@ def collect_system_info():
     data = Run_velociraptor_query("SELECT * From info()")
     # print(data)
     data = eval(data)
-    return data
+    global computerName 
+    global platform
+    global installTime
+    global localTimeZone
+    global ipAddr 
+    global runAsUser
+    global adminRights
+    global startTime
+    global scanID
+    computerName = data[0]["Hostname"]
+    installTime = str(datetime.utcfromtimestamp(data[0]["BootTime"]))
+    platform = data[0]["Platform"] + " " + data[0]["PlatformFamily"] + " " + data[0]["PlatformVersion"]
+    adminRights = data[0]["IsAdmin"]
+    startTime = get_start_time()
+    localTimeZone = get_local_TimeZone()
+    ipAddr = get_ip_address()
+    runAsUser = get_run_as_user()
+    scanID = get_scanID()
 
 def get_scanID():   
     return computerName + "_" + str(uuid.uuid4())
@@ -157,43 +182,45 @@ def get_scanID():
 def create_report():
     endTime = datetime.now()
     report_form( 
-            computerName, 
-            platform, 
-            installTime,
-            localTimeZone, 
-            ipAddr, 
-            runAsUser, 
-            adminRights, 
-            startTime, 
-            endTime,
-            scanID
-    )
+                computerName, 
+                platform, 
+                installTime,
+                localTimeZone, 
+                ipAddr, 
+                runAsUser, 
+                adminRights, 
+                startTime, 
+                endTime,
+                scanID
+        )
+    
 
-def get_installed_software():
-    data = Run_velociraptor_artifacts("Windows.Sys.Programs")
-    data = json.loads(data)
-    return data
 
-def get_ip_config_all():
-    data = Run_velociraptor_query("SELECT Stdout FROM execve(argv=['powershell.exe', '/c', 'ipconfig /all'])")
-    return data
+if __name__ == "__main__":
+    collect_system_info()
 
-### Collect system information 
-data = collect_system_info()
-computerName = data[0]["Hostname"]
-installTime = str(datetime.utcfromtimestamp(data[0]["BootTime"]))
-platform = data[0]["Platform"] + " " + data[0]["PlatformFamily"] + " " + data[0]["PlatformVersion"]
-adminRights = data[0]["IsAdmin"]
-startTime = get_start_time()
-localTimeZone = get_local_TimeZone()
-ipAddr = get_ip_address()
-runAsUser = get_run_as_user()
-scanID = get_scanID()
-installed_software = get_installed_software()
-ipconfig_all = get_ip_config_all()
+    # global computerName 
+    # global platform
+    # global installTime
+    # global localTimeZone
+    # global ipAddr 
+    # global runAsUser
+    # global adminRights
+    # global startTime
+    # global scanID
 
-### Collect system artifacts
-cwd = os.getcwd()
-extractFolder = create_new_folder(cwd, "extract")
-collect_evtx_file(extractFolder)
-collect_OBJECT_DATA(extractFolder)
+    # computerName = data[0]["Hostname"]
+    # installTime = str(datetime.utcfromtimestamp(data[0]["BootTime"]))
+    # platform = data[0]["Platform"] + " " + data[0]["PlatformFamily"] + " " + data[0]["PlatformVersion"]
+    # adminRights = data[0]["IsAdmin"]
+    # startTime = get_start_time()
+    # localTimeZone = get_local_TimeZone()
+    # ipAddr = get_ip_address()
+    # runAsUser = get_run_as_user()
+    # scanID = get_scanID()
+
+    
+    # cwd = os.getcwd()
+    # extractFolder = create_new_folder(cwd, "extract")
+    # collect_evtx_file(extractFolder)
+
