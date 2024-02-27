@@ -73,17 +73,17 @@ def create_new_file(filename, filepath, data):
 #     except subprocess.CalledProcessError as e:
 #         print(f"Error: {e.output}")
 
-def Run_velociraptor_query_csv_format(query, verbose=False):
-    # Path to executable of Velociraptor on Windows
-    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-    command = [velociraptor_executable, 'query', query, '--format', 'csv']
-    try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        if verbose:
-            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e.output}")
+# def Run_velociraptor_query_csv_format(query, verbose=False):
+#     # Path to executable of Velociraptor on Windows
+#     velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
+#     command = [velociraptor_executable, 'query', query, '--format', 'csv']
+#     try:
+#         result = subprocess.run(command, shell=True, capture_output=True, text=True)
+#         if verbose:
+#             print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
+#         return result.stdout
+#     except subprocess.CalledProcessError as e:
+#         print(f"Error: {e.output}")
 
 def Run_velociraptor_artifacts(artifacts_name,verbose=False):
     # Path to executable of Velociraptor on Windows
@@ -105,15 +105,15 @@ def extract_base_folder(path):
     return "/".join(base_folder)
 
 def collect_evtx_file(outputFolder):
-    system_log_key_path = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\System\File"
-    application_log_key_path = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\File"
-    security_log_key_path = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Security\File"
-    output = Run_velociraptor_ls("reg",system_log_key_path, True)
-    system_log_path = os.path.expandvars(eval(output)["Data"]["value"].lower())
-    output = Run_velociraptor_ls("reg",application_log_key_path, True)
-    application_log_path = os.path.expandvars(eval(output)["Data"]["value"].lower())
-    output = Run_velociraptor_ls("reg",security_log_key_path, True)
-    security_log_path = os.path.expandvars(eval(output)["Data"]["value"].lower())
+    system_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/System/File"
+    application_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Application/File"
+    security_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Security/File"
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ", True)   
+    system_log_path = os.path.expandvars(json.loads(output)[0]["Data"]["value"].lower())
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ", True) 
+    application_log_path = os.path.expandvars(json.loads(output)[0]["Data"]["value"].lower())
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ", True) 
+    security_log_path = os.path.expandvars(json.loads(output)[0]["Data"]["value"].lower())
     default_log_path = "C:/Windows/system32/winevt/logs"
     sourceFolderList = [default_log_path, extract_base_folder(system_log_path), extract_base_folder(application_log_path), extract_base_folder(security_log_path)]
     uniqueSourceFolderList = list(set(sourceFolderList))
@@ -131,6 +131,19 @@ def collect_evtx_file(outputFolder):
             Run_velociraptor_query(query)
             source = os.path.join(os.getcwd(),filename)
             shutil.move(source, dest)
+
+def collect_OBJECT_DATA(outputFolder):
+    query = "SELECT Name, OSPath, Size as RawSize, humanize(bytes=Size) as Size, Mode.String, Mtime FROM glob(globs='C:/Windows/system32/wbem/Repository/**/OBJECTS.DATA',accessor='ntfs')"
+    output = Run_velociraptor_query(query,True)
+    parsed = json.loads(output)
+    for i in parsed:
+        source = re.sub(r"\\", "/", i["OSPath"])
+        filename = i["Name"]
+        dest = os.path.join(outputFolder,filename)
+        query1 = f"SELECT copy(filename='{source}', accessor='ntfs', dest='{filename}') FROM scope()"
+        Run_velociraptor_query(query1)
+        source = os.path.join(os.getcwd(),filename)
+        shutil.move(source, dest)
 
 def collect_system_info():
     data = Run_velociraptor_query("SELECT * From info()")
@@ -162,9 +175,10 @@ def get_installed_software():
     return data
 
 def get_ip_config_all():
-    data = Run_velociraptor_query_csv_format("SELECT Stdout FROM execve(argv=['powershell.exe', '/c', 'ipconfig /all'])")
+    data = Run_velociraptor_query("SELECT Stdout FROM execve(argv=['powershell.exe', '/c', 'ipconfig /all'])")
     return data
 
+### Collect system information 
 data = collect_system_info()
 computerName = data[0]["Hostname"]
 installTime = str(datetime.utcfromtimestamp(data[0]["BootTime"]))
@@ -177,6 +191,9 @@ runAsUser = get_run_as_user()
 scanID = get_scanID()
 installed_software = get_installed_software()
 ipconfig_all = get_ip_config_all()
-# cwd = os.getcwd()
-# extractFolder = create_new_folder(cwd, "extract")
-# collect_evtx_file(extractFolder)
+
+### Collect system artifacts
+cwd = os.getcwd()
+extractFolder = create_new_folder(cwd, "extract")
+collect_evtx_file(extractFolder)
+collect_OBJECT_DATA(extractFolder)
