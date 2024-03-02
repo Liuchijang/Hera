@@ -7,6 +7,7 @@ sys.path.append('./config_ui')
 from config_ui.report_form import report_form
 from collection import *
 from event_log import event_log_module
+from process_scan import process_module  
 from network import network_module  
 
 if __name__ == "__main__":
@@ -20,12 +21,18 @@ if __name__ == "__main__":
         server_config = ".\\config\\server.config.yaml"
         command = [velociraptor_executable, "--definitions", artifacts_folder, "--config", server_config, "frontend"]
         # print(command)
-        subprocess.Popen(command, shell=True)
-
-        systeminfoFolder = create_new_folder(".", "system_info")
-        extractFolder = create_new_folder(".", "extract")
-        collect_system_info()
-        collect_evtx_file(extractFolder)
-        event_log_module()
-        network_module()
-        create_report()
+        try:
+                server = subprocess.Popen(command, shell=True)
+                # systeminfoFolder = create_new_folder(".", "system_info")
+                # extractFolder = create_new_folder(".", "extract")
+                collect_system_info()
+                # collect_OBJECT_DATA(extractFolder)
+                # collect_evtx_file(extractFolder)
+                # event_log_module()
+                # process_module()
+                # network_module()
+                create_report()
+        except Exception as e:
+                print(f"An error occurred: {e}")
+        finally:
+                server.terminate()
