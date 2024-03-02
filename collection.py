@@ -57,56 +57,6 @@ def create_new_file(filename, filepath, data):
     except IOError as e:
         print(f"Error creating file: {e}")
 
-# def Run_velociraptor_ls(accessor, filePath, verbose=False):
-#      # Path to executable of Velociraptor on Windows
-#     velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-#     command = [velociraptor_executable, 'fs', '--accessor', accessor, 'ls', filePath]
-#     try:
-#         result = subprocess.run(command, shell=True, capture_output=True, text=True)
-#         if verbose:
-#             print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-#         return result.stdout
-#     except subprocess.CalledProcessError as e:
-#         print(f"Error: {e.output}")
-
-# def Run_velociraptor_query(query, verbose=False):
-#     # Path to executable of Velociraptor on Windows
-#     velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-#     command = [velociraptor_executable, 'query', query, '--format', 'json']
-#     try:
-#         result = subprocess.run(command, shell=True, capture_output=True, text=True)
-#         if verbose:
-#             print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-#         return result.stdout
-#     except subprocess.CalledProcessError as e:
-#         print(f"Error: {e.output}")
-
-# def Run_velociraptor_query_csv_format(query, verbose=False):
-#     # Path to executable of Velociraptor on Windows
-#     velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-#     command = [velociraptor_executable, 'query', query, '--format', 'csv']
-#     try:
-#         result = subprocess.run(command, shell=True, capture_output=True, text=True)
-#         if verbose:
-#             print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-#         return result.stdout
-#     except subprocess.CalledProcessError as e:
-#         print(f"Error: {e.output}")
-
-def Run_velociraptor_artifacts(artifacts_name,verbose=False):
-    # Path to executable of Velociraptor on Windows
-    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-    command = [velociraptor_executable, 'artifacts collect', artifacts_name, '--format', 'json']
-    try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        if verbose:
-            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e.output}")
-
-
-
 def extract_base_folder(path):
     components = path.split("\\")
     base_folder = components[:-1]
@@ -198,28 +148,7 @@ def create_report():
 
 if __name__ == "__main__":
     collect_system_info()
-
-    # global computerName 
-    # global platform
-    # global installTime
-    # global localTimeZone
-    # global ipAddr 
-    # global runAsUser
-    # global adminRights
-    # global startTime
-    # global scanID
-
-    # computerName = data[0]["Hostname"]
-    # installTime = str(datetime.utcfromtimestamp(data[0]["BootTime"]))
-    # platform = data[0]["Platform"] + " " + data[0]["PlatformFamily"] + " " + data[0]["PlatformVersion"]
-    # adminRights = data[0]["IsAdmin"]
-    # startTime = get_start_time()
-    # localTimeZone = get_local_TimeZone()
-    # ipAddr = get_ip_address()
-    # runAsUser = get_run_as_user()
-    # scanID = get_scanID()
-
-    
+   
     # cwd = os.getcwd()
     # extractFolder = create_new_folder(cwd, "extract")
     # collect_evtx_file(extractFolder)
