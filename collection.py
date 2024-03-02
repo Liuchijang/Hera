@@ -149,8 +149,5 @@ def create_report():
 if __name__ == "__main__":
     collect_system_info()
    
-    cwd = os.getcwd()
-    extractFolder = create_new_folder(cwd, "extract")
-    collect_evtx_file(extractFolder)
-    collect_OBJECT_DATA(extractFolder)
+
 

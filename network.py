@@ -73,5 +73,5 @@ def network_module():
                         file.write(f"Authenticode: {str(connection_item['Authenticode'])}\n")
 
     print("Network information and Loaded DLL of process is written to network-module-output.txt")
-
-network_module()
+if __name__ == "__main__":
+    network_module()
