@@ -36,7 +36,7 @@ def network_module():
         if pid not in combined_data:
             combined_data[pid] = {'DLL': [], 'Connection': []}
         combined_data[pid]['Connection'].append(connection_item)
-    with open("combined_data.txt", "w") as file:
+    with open("network-module-output.txt", "w") as file:
         for pid, data in combined_data.items():
             file.write(f"\n-------------------------------------------------------------------------------------\n")
             file.write(f"Pid: {pid}\n")
@@ -72,6 +72,6 @@ def network_module():
                         file.write(f"Timestamp: {str(connection_item['Timestamp'])}\n")
                         file.write(f"Authenticode: {str(connection_item['Authenticode'])}\n")
 
-    print("Data written to combined_data.txt")
+    print("Network information and Loaded DLL of process is written to network-module-output.txt")
 
 network_module()
