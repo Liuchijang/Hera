@@ -94,12 +94,12 @@ parameters:
 sources:
  - name: Upload
    query: |
-        LET OSPath <= SELECT dirname(path=Exe) + '\\tools\\hayabusa-2.13.0-win-x64.exe' as HYabsolutePath, dirname(path=Exe) as curDir
+        LET OSPath <= SELECT dirname(path=Exe) + '\\hayabusa-2.13.0-win-x64.exe' as HYabsolutePath, dirname(path=Exe) as curDir
         FROM pslist(pid=getpid())
-        LET ResultFile <= str(str=OSPath[0].curDir) + '\\hayabusa-results.' + OutputFormat
+        LET ResultFile <= str(str=OSPath[0].curDir) + '\\..\\event-log-module-results.' + OutputFormat
         LET HayabusaExe <= str(str=OSPath[0].HYabsolutePath)
         LET CurrentDir <= str(str=OSPath[0].curDir)
-        LET LogsPath <= str(str=OSPath[0].curDir) + '\\extract'
+        LET LogsPath <= str(str=OSPath[0].curDir)+ '\\..\\extract' 
 
 
         -- Optionally update the rules
@@ -112,6 +112,7 @@ sources:
         -- If it does not match if(condition...), it returns Null, so remove Null with filter(....regex=".+")
         LET cmdline <= filter(list=(
           HayabusaExe, HayabusaCmd, "--directory", LogsPath,
+          "--clobber",
           "--no-wizard", 
           "--output", ResultFile,
           "--min-level", MinimalLevel,
@@ -137,8 +138,8 @@ sources:
         -- Run the tool and divert messages to logs.
         LET ExecHB <= SELECT *
         FROM execve(argv=cmdline, sep="\n", length=9999999)
-        WHERE log(message=Stdout)
-
+        
+        SELECT * FROM ExecHB
         -- Upload the raw file.
         SELECT upload(file=ResultFile) AS Uploads FROM scope()
 
