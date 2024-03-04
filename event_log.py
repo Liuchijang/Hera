@@ -9,10 +9,11 @@ def event_log_module():
     query = "select * from Artifact.Windows.EventLogs.LocalHayabusa()"
     output = Run_velociraptor_query(query)
     correctSyntax = re.sub(r"\]\[", ",",output)
-    parsed = json.loads(correctSyntax)
+    parsed = eval(correctSyntax)
 
     # Optionally write output to file
     cwd = os.getcwd()
-    filepath = os.path.join(cwd,"Event log module's output.json")
+    filepath = os.path.join(cwd,"Event-log-module-commandLine-log.json")
     with open(filepath, 'wb') as f:
         f.write(output.encode('utf8', 'ignore'))
+event_log_module()
