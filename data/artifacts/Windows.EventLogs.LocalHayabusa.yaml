@@ -94,7 +94,7 @@ parameters:
 sources:
  - name: Upload
    query: |
-        LET OSPath <= SELECT dirname(path=Exe) + '\\tools\\hayabusa-2.13.0-win-x64.exe' as HYabsolutePath, dirname(path=Exe) as curDir
+        LET OSPath <= SELECT dirname(path=Exe) + '\\data\\tools\\hayabusa-2.13.0-win-x64.exe' as HYabsolutePath, dirname(path=Exe) as curDir
         FROM pslist(pid=getpid())
         LET ResultFile <= str(str=OSPath[0].curDir) + '\\hayabusa-results.' + OutputFormat
         LET HayabusaExe <= str(str=OSPath[0].HYabsolutePath)

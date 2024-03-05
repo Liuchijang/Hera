@@ -1,16 +1,14 @@
-import subprocess
 import os
 import re
 import shutil
 import psutil
-import json
 from datetime import datetime
 from tzlocal import get_localzone
 import pytz
 import socket
 import uuid
-from config_ui.report_form import report_form
-from velociraptor_sever_api import Run_velociraptor_query
+from config.config_ui.report_form import report_form
+from core.velociraptor_sever_api import Run_velociraptor_query
 
 computerName = ""
 platform = ""
