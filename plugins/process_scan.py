@@ -1,6 +1,6 @@
 import os
 import re
-from velociraptor_sever_api import Run_velociraptor_query
+from core.velociraptor_sever_api import Run_velociraptor_query
 
 
 def process_module():

@@ -2,14 +2,16 @@ import sys
 import argparse
 import subprocess
 
-sys.path.append('./config_ui')
+sys.path.append('./config/config_ui')
+sys.path.append('./core')
+sys.path.append('./plugins')
 
-from config_ui.report_form import report_form
-from collection import *
-from event_log import event_log_module
-from process_scan import process_module  
-from network import network_module  
-from registry import registry_module
+from config.config_ui.report_form import report_form
+from core.collection import *
+from plugins.event_log import event_log_module
+from plugins.process_scan import process_module  
+from plugins.network import network_module  
+from plugins.registry import registry_module
 
 if __name__ == "__main__":
 
@@ -18,7 +20,7 @@ if __name__ == "__main__":
         args = parser.parse_args()
 
         velociraptor_executable = ".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-        artifacts_folder = ".\\Velociraptor_artifacts"
+        artifacts_folder = ".\\data\\artifacts"
         server_config = ".\\config\\server.config.yaml"
         command = [velociraptor_executable, "--definitions", artifacts_folder, "--config", server_config, "frontend"]
         # print(command)
@@ -26,12 +28,12 @@ if __name__ == "__main__":
                 server = subprocess.Popen(command, shell=True)
                 # systeminfoFolder = create_new_folder(".", "system_info")
                 # extractFolder = create_new_folder(".", "extract")
-                collect_system_info()
+                # collect_system_info()
                 # collect_OBJECT_DATA(extractFolder)
                 # collect_evtx_file(extractFolder)
                 # event_log_module()
                 # process_module()
-                # network_module()
+                network_module()
                 registry_module()
                 create_report()
         except Exception as e:

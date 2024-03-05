@@ -1,4 +1,4 @@
-from velociraptor_sever_api import Run_velociraptor_query
+from core.velociraptor_sever_api import Run_velociraptor_query
 
 def network_module():
     networkArtifact = "Windows.Network.NetstatEnriched"

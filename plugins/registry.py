@@ -1,6 +1,6 @@
 import os
 import re
-from velociraptor_sever_api import Run_velociraptor_query
+from core.velociraptor_sever_api import Run_velociraptor_query
 
 
 
@@ -13,7 +13,7 @@ def get_registry_yaml_files(folder_path):
 
     return registry_yaml_files
 
-folder_path = ".//Velociraptor_artifacts"
+folder_path = ".//data//artifacts"
 artifacts = get_registry_yaml_files(folder_path)
 
 
