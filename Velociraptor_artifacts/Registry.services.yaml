@@ -1,0 +1,48 @@
+name: Registry.services
+
+parameters:
+
+  - name: yaraRule
+    default: |
+      rule Rule1 {
+        strings:
+        $ = /\\windows\\system32\\Drivers\\.*\.sys/ nocase
+        $ = /\\SystemRoot\\System32\\drivers\\.*\.sys/ nocase
+        $ = "system32\\DRIVERS\\USBSTOR"
+        $ = /system32\\Drivers\\.*\.sys/ nocase
+        $ = "%SystemRoot%\\System32\\svchost.exe" nocase
+        $ = "C:\\Windows\\system32\\svchost.exe"
+        $ = /\\Windows\\winsxs\\.*\\TiWorker.exe/
+        $ = /\\Windows\\System32\\drvinst.exe/
+        $ = /\\Windows\\System32\\services.exe/
+        $ = /\\Windows\\System32\\msiexec.exe/
+        $ = /\\Windows\\System32\\regsvr32.exe/
+        condition:
+        not any of them
+      }
+
+
+
+
+sources:
+ - precondition:
+    SELECT OS from info() where OS = "windows"
+   queries:
+   
+   - |
+    Let reg = (
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Services\\*\\ServiceDLL",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Services\\*\\ImagePath"
+     )
+    
+    Let regs <= SELECT FullPath from glob(
+        globs=reg,
+        accessor="reg"
+      )
+    // select * from regs
+
+   - |
+    SELECT File.FullPath as ValueName, File.Data.value as Contents, timestamp (epoch=File.Mtime. Sec) as ModTime FROM yara(
+      rules=yaraRule,
+      files=regs.FullPath,
+      accessor="reg")

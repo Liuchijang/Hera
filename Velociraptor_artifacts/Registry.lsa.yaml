@@ -1,0 +1,36 @@
+name: Registry.lsa
+
+parameters:
+
+  - name: yaraRule
+    default: |
+      rule Rule {
+        strings:
+        $ = /C:\\Windows\\System32\\spool\\drivers\\x64\\4\\*/
+        $ = "C:\\Windows\\System32\\spool\\drivers\\x64\\4"
+        condition:
+        not any of them
+      }
+
+sources:
+ - precondition:
+    SELECT OS from info() where OS = "windows"
+   queries:
+   
+   - |
+    Let reg = (
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\Control\\Lsa\\Security Packages*",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\Control\\Lsa\\OSConfig\\Security Packages*"
+      )
+    
+    Let regs <= SELECT FullPath from glob(
+        globs=reg,
+        accessor="reg"
+      )
+    // select * from regs
+
+   - |
+    SELECT File.FullPath as ValueName, File.Data.value as Contents, timestamp (epoch=File.Mtime. Sec) as ModTime FROM yara(
+      rules=yaraRule,
+      files=regs.FullPath,
+      accessor="reg")
