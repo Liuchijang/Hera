@@ -1,20 +1,4 @@
-import os
-import re
-import json
-import subprocess
 from velociraptor_sever_api import Run_velociraptor_query
-
-def Run_velociraptor_artifact(artifact_name, verbose=False):
-    # Path to executable of Velociraptor on Windows
-    velociraptor_executable = r".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-    command = [velociraptor_executable, '--definitions', './content/exchange/artifacts', 'artifacts', "collect", artifact_name,'--format','json']
-    try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True,encoding="utf-8")
-        if verbose:
-            print(f"\n----------------------------------------------------------------------------",f"Command: {command}",result.stdout,sep="\n")
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e.output}")
 
 def network_module():
     networkArtifact = "Windows.Network.NetstatEnriched"

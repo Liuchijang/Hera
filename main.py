@@ -9,6 +9,7 @@ from collection import *
 from event_log import event_log_module
 from process_scan import process_module  
 from network import network_module  
+from registry import registry_module
 
 if __name__ == "__main__":
 
@@ -17,7 +18,7 @@ if __name__ == "__main__":
         args = parser.parse_args()
 
         velociraptor_executable = ".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
-        artifacts_folder = ".\\Velociraptor-artifacts"
+        artifacts_folder = ".\\Velociraptor_artifacts"
         server_config = ".\\config\\server.config.yaml"
         command = [velociraptor_executable, "--definitions", artifacts_folder, "--config", server_config, "frontend"]
         # print(command)
@@ -31,6 +32,7 @@ if __name__ == "__main__":
                 # event_log_module()
                 # process_module()
                 # network_module()
+                registry_module()
                 create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")
