@@ -60,15 +60,56 @@ def extract_base_folder(path):
     base_folder = components[:-1]
     return "/".join(base_folder)
 
+def collect_necessary_evtx(outputFolder):
+    system_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/System/File"
+    application_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Application/File"
+    security_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Security/File"
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ", False)   
+    system_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ", False) 
+    application_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ", False) 
+    security_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
+    default_log_path = "C:/Windows/system32/winevt/logs"
+    sourceFolderList = [default_log_path, extract_base_folder(system_log_path), extract_base_folder(application_log_path), extract_base_folder(security_log_path)]
+    uniqueSourceFolderList = list(set(sourceFolderList))
+    list_files = ['Security.evtx',
+                  'System.evtx',
+                  'Microsoft-Windows-Sysmon%4Operational.evtx',
+                  'Microsoft-Windows-PowerShell%4Operational.evtx',
+                  'Microsoft-Windows-Windows Defender%4Operational.evtx',
+                  'Microsoft-Windows-SMBServer%4Operational.evtx',
+                  'Microsoft-Windows-SmbClient%4Connectivity.evtx',
+                  'Microsoft-Windows-Bits-Client%4Operational.evtx',
+                  'Microsoft-Windows-TerminalServices-LocalSessionManager%4Operational.evtx',
+                  'Microsoft-Windows-TerminalServices-RDPClient%4Operational.evtx',
+                  'Microsoft-Windows-WMI-Activity%4Operational.evtx',
+                  'Microsoft-Windows-TaskScheduler%4Operational.evtx']
+    for i in uniqueSourceFolderList:
+        for k in list_files:
+            query1 = f"SELECT Name, OSPath, Size as RawSize, humanize(bytes=Size) as Size, Mode.String, Mtime FROM glob(globs='{i}/{k}') "
+            output = Run_velociraptor_query(query1,False)
+            list_evtx_files= re.sub(r"\]\[", ",",output)
+            parsed = eval(list_evtx_files)
+            for j in parsed:
+                source = re.sub(r"\\", "/", j["OSPath"])
+                filename = j["Name"]
+                dest = os.path.join(outputFolder,filename)
+                query = f"SELECT copy(filename='{source}', accessor='ntfs', dest='{filename}') FROM scope()"
+                Run_velociraptor_query(query)
+                print(f"Collect {source} successfully, saved in {dest}")
+                source = os.path.join(os.getcwd(),filename)
+                shutil.move(source, dest)
+
 def collect_evtx_file(outputFolder):
     system_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/System/File"
     application_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Application/File"
     security_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Security/File"
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ", True)   
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ", False)   
     system_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ", True) 
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ", False) 
     application_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ", True) 
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ", False) 
     security_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
     default_log_path = "C:/Windows/system32/winevt/logs"
     sourceFolderList = [default_log_path, extract_base_folder(system_log_path), extract_base_folder(application_log_path), extract_base_folder(security_log_path)]
@@ -145,7 +186,8 @@ def create_report():
 
 
 if __name__ == "__main__":
-    collect_system_info()
+    extractFolder = create_new_folder(".", "extract")
+    collect_necessary_evtx(extractFolder)
    
 
 
