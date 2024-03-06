@@ -1,0 +1,54 @@
+name: Registry.com.hijack
+
+parameters:
+
+  - name: yaraRule
+    default: |
+      rule Rule {
+        strings:
+        "{4ED3A719-CEA8-4BD9-910D-E252F997AFC2}"
+        "{A56A841F-E974-45C1-8001-7E3F8A085917}"
+        "{BFEC0C93-0B7D-4F2C-B09C-AFFFC4BDAE78}"
+        "%SystemRoot%\\system32\\shdocvw.dll"
+        /\"?:\\Program Files \(x86\)\\Adobe\\Acrobat Reader DC\\Reader\\ADNotificationManager\.exe\" -ToastActivated/
+        /\"?:\\Program Files (x86)\\Adobe\\Acrobat DC\\Acrobat\\ADNotificationManager.exe\" -ToastActivated/
+        /\"?:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\ADNotificationManager.exe\" -ToastActivated/
+        /\"?:\\Program Files\\Adobe\\Acrobat Reader DC\\Reader\\ADNotificationManager.exe\" -ToastActivated/
+        /\"?:\\Program Files\\Adobe\\Adobe Creative Cloud\\ACC\\Creative Cloud.exe\" -ToastActivated/
+        /.*?:\\Users\\.*\\AppData\\Local\\Island\\Update\\.*/
+        /.*?:\\Users\\.*\\AppData\\Local\\Google\\Update\\.*/
+        /\"?:\\Program Files (x86)\\Citrix\\ICA Client\\SelfServicePlugin\\SelfService.exe\" -ToastActivated/
+        "%SystemRoot%\\system32\\shdocvw.dll",
+        "%SystemRoot%\\sysWOW64\\shdocvw.dll"
+        /\"?:\\Program Files\\Remote Desktop\\msrdcw.exe\" -ToastActivated/
+        /\"?:\\Users\\*\\AppData\\Local\\Apps\\Remote Desktop\\msrdcw.exe\" -ToastActivated/
+        /?:\\Program Files\\Java\\jre*\\bin\\jp2iexp.dll/
+        /?:\\Program Files (x86)\\Java\\jre*\\bin\\jp2iexp.dll/
+        condition:
+        not any of them
+      }
+
+sources:
+ - precondition:
+    SELECT OS from info() where OS = "windows"
+   queries:
+   
+   - |
+    Let reg = (
+      "HKEY_USERS\\*\\InprocServer32\\",
+      "HKEY_USERS\\*\\LocalServer32\\",
+      "HKEY_USERS\\*\\DelegateExecute",
+      "HKEY_USERS\\*\\TreatAs\\",
+      "HKEY_USERS\\*\\ScriptletURL*"
+    )
+    
+    Let regs <= SELECT FullPath from glob(
+        globs=reg,
+        accessor="reg"
+      )
+    
+   - |
+    SELECT File.FullPath as ValueName, File.Data.value as Contents, timestamp (epoch=File.Mtime. Sec) as ModTime FROM yara(
+      rules=yaraRule,
+      files=regs.FullPath,
+      accessor="reg")

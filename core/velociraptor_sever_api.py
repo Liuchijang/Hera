@@ -1,6 +1,6 @@
 import json
 import grpc
-import time
+import os
 import re
 
 
@@ -44,7 +44,6 @@ def run(config, query):
         return str(package)
 
 def Run_velociraptor_query(query, verbose=False):
-
     config = pyvelociraptor.LoadConfigFile("./config/api.config.yaml")
     data = run(config, query)
     if verbose: print(data)

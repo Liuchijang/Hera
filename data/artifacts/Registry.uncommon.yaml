@@ -1,0 +1,83 @@
+name: Registry.uncommon
+
+parameters:
+
+  - name: yaraRule
+    default: |
+      rule Rule {
+        strings:
+        $ = /C:\\Windows\\system32\\userinit.exe/
+        $ = /C:\\Program Files \(x86\)\\.*\.exe/
+        $ = /C:\\Program Files\\.*\.exe/
+        $ =  /C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\[^\\]+\\MsMpEng.exe/
+        condition:
+        not any of them
+      }
+
+sources:
+ - precondition:
+    SELECT OS from info() where OS = "windows"
+   queries:
+   
+   - |
+    Let reg = (
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Terminal Server\\Install\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\*",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Terminal Server\\Install\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Runonce\\*",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\Load",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\Run",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\IconServiceLib",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Shell",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Shell",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\AppSetup",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Taskman",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Userinit",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\VmApplet",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run\\*",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Shell",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Logoff\\Script",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Logon\\Script",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Shutdown\\Script",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Startup\\Script",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run\\*",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Shell",
+      "HKEY_USERS\\*\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Logoff\\Script",
+      "HKEY_USERS\\*\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Logon\\Script",
+      "HKEY_USERS\\*\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Shutdown\\Script",
+      "HKEY_USERS\\*\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Scripts\\Startup\\Script",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\*\\ShellComponent",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows CE Services\\AutoStartOnConnect\\MicrosoftActiveSync",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows CE Services\\AutoStartOnDisconnect\\MicrosoftActiveSync",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Ctf\\LangBarAddin\\*\\FilePath",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Internet Explorer\\Extensions\\*\\Exec",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Internet Explorer\\Extensions\\*\\Script",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Command Processor\\Autorun",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Ctf\\LangBarAddin\\*\\FilePath",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Internet Explorer\\Extensions\\*\\Exec",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Internet Explorer\\Extensions\\*\\Script",
+      "HKEY_USERS\\*\\SOFTWARE\\Microsoft\\Command Processor\\Autorun",
+      "HKEY_USERS\\*\\Control Panel\\Desktop\\scrnsave.exe",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\*\\VerifierDlls",
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\GpExtensions\\*\\DllName",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\SafeBoot\\AlternateShell",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\Terminal Server\\Wds\\rdpwd\\StartupPrograms",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\Terminal Server\\WinStations\\RDP-Tcp\\InitialProgram",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\Session Manager\\BootExecute",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\Session Manager\\SetupExecute",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\Session Manager\\Execute",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\Session Manager\\S0InitialCommand",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\ServiceControlManagerExtension",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet*\\Control\\BootVerificationProgram\\ImagePath",
+      "HKEY_LOCAL_MACHINE\\SYSTEM\\Setup\\CmdLine",
+      "HKEY_USERS\\*\\Environment\\UserInitMprLogonScript"
+      )
+    
+    Let regs <= SELECT FullPath from glob(
+        globs=reg,
+        accessor="reg"
+      )
+    // select * from regs
+   - |
+    SELECT File.FullPath as ValueName, File.Data.value as Contents, timestamp (epoch=File.Mtime. Sec) as ModTime FROM yara(
+      rules=yaraRule,
+      files=regs.FullPath,
+      accessor="reg")
