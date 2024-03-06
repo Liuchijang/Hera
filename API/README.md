@@ -1,3 +1,5 @@
+Change with your own API_KEY
+
 pip install -r requirements.txt 
 
 uvicorn main:app --reload 
