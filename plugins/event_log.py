@@ -12,7 +12,7 @@ def event_log_module():
 
     # Optionally write output to file
     cwd = os.getcwd()
-    filepath = os.path.join(cwd,"Event log module's output.json")
+    filepath = os.path.join(cwd,"Event-log-module-commandLine-log.json")
     with open(filepath, 'wb') as f:
         f.write(output.encode('utf8', 'ignore'))
 
