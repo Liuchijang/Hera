@@ -78,7 +78,7 @@ def check_hash(hash: str):
     headers = {"x-apikey": API_KEY[API_NUM],
                 "Content-Type": "application/json"}
     response = requests.get(url, headers=headers)
-    if response.status_code == 400: # Hash is not a valid hash or not found
+    if response.status_code == 400: # Hash is not a valid hash 
         return "Hash " + hash + " is not a valid hash"
     elif response.status_code == 404: # Hash is not found
         return "Hash " + hash + " is not found"
