@@ -34,7 +34,7 @@ parameters:
    default: N
  - name: OutputFormat
    description: "Choose the format of the result file"
-   default: csv
+   default: jsonl
    type: choices
    choices:
      - csv
