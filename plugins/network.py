@@ -1,6 +1,7 @@
 from core.velociraptor_sever_api import Run_velociraptor_query
+import os
 
-def network_module():
+def network_module(outputFolder):
     networkArtifact = "Windows.Network.NetstatEnriched"
     query = f"Select * from Artifact.{networkArtifact}()"
     netstat = Run_velociraptor_query(query)
@@ -20,7 +21,8 @@ def network_module():
         if pid not in combined_data:
             combined_data[pid] = {'DLL': [], 'Connection': []}
         combined_data[pid]['Connection'].append(connection_item)
-    with open("network-module-output.txt", "w") as file:
+    filepath = os.path.join(outputFolder,"network-module-output.txt")
+    with open(filepath, "w") as file:
         for pid, data in combined_data.items():
             file.write(f"\n-------------------------------------------------------------------------------------\n")
             file.write(f"Pid: {pid}\n")
