@@ -31,6 +31,7 @@ if __name__ == "__main__":
                 # extractFolder = create_new_folder(".", "extract")
                 # collect_system_info()
                 # collect_OBJECT_DATA(extractFolder)
+                # collect_necessary_evtx(extractFolder)
                 # collect_evtx_file(extractFolder)
                 # event_log_module()
                 # process_module()
