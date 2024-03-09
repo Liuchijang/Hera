@@ -26,6 +26,8 @@ if __name__ == "__main__":
         command = [velociraptor_executable, "--definitions", artifacts_folder, "--config", server_config, "frontend"]
         # print(command)
         try:
+                cwd = os.getcwd()
+                outputFolder = create_new_folder(extract_base_folder(cwd), "output")
                 server = subprocess.Popen(command, shell=True)
                 # systeminfoFolder = create_new_folder(".", "system_info")
                 # extractFolder = create_new_folder(".", "extract")
@@ -33,9 +35,9 @@ if __name__ == "__main__":
                 # collect_OBJECT_DATA(extractFolder)
                 # collect_necessary_evtx(extractFolder)
                 # collect_evtx_file(extractFolder)
-                # event_log_module()
+                # event_log_module(outputFolder)
                 # process_module()
-                # network_module()
+                # network_module(outputFolder)
                 # registry_module()
                 fileScan_module()
                 create_report()
