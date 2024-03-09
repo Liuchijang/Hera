@@ -12,6 +12,7 @@ from plugins.event_log import event_log_module
 from plugins.process_scan import process_module  
 from plugins.network import network_module  
 from plugins.registry import registry_module
+from plugins.files_scan import fileScan_module
 
 if __name__ == "__main__":
 
@@ -27,16 +28,19 @@ if __name__ == "__main__":
         try:
                 server = subprocess.Popen(command, shell=True)
                 # systeminfoFolder = create_new_folder(".", "system_info")
-                # extractFolder = create_new_folder(".", "extract")
+                extractFolder = create_new_folder(".", "extract")
                 # collect_system_info()
                 # collect_OBJECT_DATA(extractFolder)
                 # collect_evtx_file(extractFolder)
-                # event_log_module()
+                # collect_necessary_evtx(extractFolder)
+                event_log_module()
                 # process_module()
-                network_module()
-                registry_module()
-                create_report()
+                # network_module()
+                # registry_module()
+                # fileScan_module()
+                # create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")
         finally:
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                 server.terminate()
