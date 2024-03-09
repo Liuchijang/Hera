@@ -60,6 +60,11 @@ def extract_base_folder(path):
     base_folder = components[:-1]
     return "/".join(base_folder)
 
+def extract_Windows_base_folder(path):
+    components = path.split("\\")
+    base_folder = components[:-1]
+    return "\\".join(base_folder)
+
 def collect_necessary_evtx(outputFolder):
     system_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/System/File"
     application_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Application/File"
