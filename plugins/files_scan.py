@@ -11,7 +11,7 @@ def fileScan_module():
     result = []
     for i in parsed:
         check = check_virustotal("check_hash", i['MD5'])
-        if "Malicious" in check:
+        if check == 1:
             print(i['OSPath'])
             result.extend(i)
     return result
