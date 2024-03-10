@@ -37,10 +37,10 @@ if __name__ == "__main__":
                 # collect_evtx_file(extractFolder)
                 # event_log_module(outputFolder)
                 # process_module()
-                # network_module(outputFolder)
+                network_module()
                 # registry_module()
-                fileScan_module()
-                create_report()
+                # fileScan_module()
+                # create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")
         finally:

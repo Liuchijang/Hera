@@ -12,7 +12,7 @@ def network_module():
     for i in parsed:
         check = check_virustotal("check_ip", i['DestIP'])
         if check == 1:
-            print(i)
+            print(i["Path"] + '\n' + i["CommandLine"] + '\n' + i["DestIP"] + '\n')
             result.extend(i)
     return result
 
