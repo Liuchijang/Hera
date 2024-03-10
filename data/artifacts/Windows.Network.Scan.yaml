@@ -179,7 +179,7 @@ sources:
                 and ( Authenticode.SubjectName =~ AuthenticodeSubjectRegex or not Authenticode )
                 and ( Authenticode.Trusted =~ VerifiedRegex.Regex[0] or not Authenticode )
                 and Status =~ StatusRegex.Regex[0]
-                and Family =~ FamilyRegex.Regex[0]
+                and Family =~ FamilyRegex.Regex[0] and Family != "IPv6"
                 and Type =~ TypeRegex.Regex[0]
                 and ( format(format="%v", args=SrcIP) =~ IPRegex
                     or format(format="%v", args=DestIP) =~ IPRegex )
