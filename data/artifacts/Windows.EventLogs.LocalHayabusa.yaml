@@ -34,7 +34,7 @@ parameters:
    default: N
  - name: OutputFormat
    description: "Choose the format of the result file"
-   default: csv
+   default: jsonl
    type: choices
    choices:
      - csv
@@ -96,7 +96,7 @@ sources:
    query: |
         LET OSPath <= SELECT dirname(path=Exe) + '\\hayabusa-2.13.0-win-x64.exe' as HYabsolutePath, dirname(path=Exe) as curDir
         FROM pslist(pid=getpid())
-        LET ResultFile <= str(str=OSPath[0].curDir) + '\\..\\event-log-module-results.' + OutputFormat
+        LET ResultFile <= str(str=OSPath[0].curDir) + '\\..\\output\\event-log-module-results.' + OutputFormat
         LET HayabusaExe <= str(str=OSPath[0].HYabsolutePath)
         LET CurrentDir <= str(str=OSPath[0].curDir)
         LET LogsPath <= str(str=OSPath[0].curDir)+ '\\..\\extract' 

@@ -15,15 +15,13 @@ def run(config, query):
         private_key=config["client_private_key"].encode("utf8"),
         certificate_chain=config["client_cert"].encode("utf8"))
 
-    options = (('grpc.ssl_target_name_override', "VelociraptorServer",),)
+    options = (('grpc.ssl_target_name_override', "VelociraptorServer",), ('grpc.max_receive_message_length', 2147483647),)
 
     with grpc.secure_channel(config["api_connection_string"],
                              creds, options) as channel:
         stub = api_pb2_grpc.APIStub(channel)
 
         request = api_pb2.VQLCollectorArgs(
-            max_wait=10000,
-            max_row=10000,
             Query=[api_pb2.VQLRequest(
                 Name="Hunt",
                 VQL=query,
