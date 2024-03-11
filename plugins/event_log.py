@@ -4,6 +4,7 @@ from core.velociraptor_sever_api import Run_velociraptor_query
 
 
 def event_log_module(outputFolder):
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nEventLogs scanning...")
     artifact = "Windows.EventLogs.LocalHayabusa"
     query = "select * from Artifact.{}()".format(artifact)
 

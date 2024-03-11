@@ -18,6 +18,7 @@ artifacts = get_registry_yaml_files(folder_path)
 
 
 def registry_module():
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nRegistry scanning...")
     query = ""
     data = []
     for artifact in artifacts:

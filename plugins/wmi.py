@@ -86,6 +86,7 @@ import string
 PRINTABLE_CHARS = set(string.printable)
 
 def wmi_module(outputFolder = None):
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nWMI scanning...")
     """Main function for everything!"""
 
     # print("\n    Enumerating FilterToConsumerBindings...")
