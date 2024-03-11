@@ -3,7 +3,11 @@ description: |
    Use hollows_hunter to detect suspicious process injections.
 
    Upload any findings to the server, including process dumps.
-
+parameters:
+  - name: DetectPidRegex
+    description: "regex search Pid over detects"
+    default:  .*Detected:\s\d{1,5}
+    type: regex
 tools:
  - name: hollows_hunter
    github_project: hasherezade/hollows_hunter
@@ -21,21 +25,21 @@ sources:
       LET binaries <= SELECT dirname(path=Exe) + '\\hollows_hunter64.exe' as HLabsolutePath, dirname(path=Exe) as curDir
         FROM pslist(pid=getpid())
       LET HollowsHunterExe <= str(str=binaries[0].HLabsolutePath)
-      LET HollowsHunterOutput <= str(str=binaries[0].curDir) + '\\HollowsHunter-Output'
-      LET ResultFile <= str(str=binaries[0].curDir) + '\\summary.json'
-      -- Run the tool and relay back the output, as well as upload all the files from the tempdir.
-      SELECT *
-      FROM execve(argv=[HollowsHunterExe,"/hooks",
+      LET HollowsHunterOutput <= str(str=binaries[0].curDir) + '\\..\\output\\HollowsHunter'
+      LET ResultFile <= str(str=binaries[0].curDir) + '\\..\\output\\HollowsHunter\\summary.json'
+      -- Run the tool and relay back the output to the output\HollowHunter folder.
+      LET HollowHunterOutput <= SELECT Stdout
+      FROM execve(argv=[HollowsHunterExe,
+           "/hooks",
+           "/obfusc", 3,
+           "/shellc", 3, 
            "/json", "/dir", HollowsHunterOutput], sep="\n")
-      
-           
-  - name: Summary
-    query: |
-      SELECT '----------------------------------Hollow Hunter Summary-------------------------------------' FROM info()
-      LET LookupPid(pid) = SELECT Name, CommandLine, Exe FROM pslist(pid=pid)
-
-      SELECT *, LookupPid(pid=pid)[0] AS ProcessInfo
-      FROM foreach(row=parse_json(
-            data=read_file(filename=ResultFile)).suspicious)  
+      -- Print detected processes and its information to screen
+      LET Parsing <= SELECT split(string=Stdout,sep=' ')[2] as Detected
+      FROM HollowHunterOutput
+      WHERE Stdout =~ DetectPidRegex
+      LET Parsed <= SELECT split(string=Detected,sep='\r')[0] as DetectedPid
+      FROM Parsing
+      SELECT DetectedPid, { select Exe, CommandLine, Username from pslist(pid=int(int=DetectedPid)) } as ProcessInfo
+      FROM Parsed
             
-
