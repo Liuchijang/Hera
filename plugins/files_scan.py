@@ -3,6 +3,7 @@ from core.velociraptor_sever_api import Run_velociraptor_query
 from core.check_virustotal import check_virustotal
 
 def fileScan_module():
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nFiles scanning...")
     artifact = "Files.scan"
     query = "select * from Artifact.{}()".format(artifact)
     output = Run_velociraptor_query(query)

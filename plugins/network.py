@@ -3,12 +3,14 @@ from core.velociraptor_sever_api import Run_velociraptor_query
 from core.check_virustotal import check_virustotal
 
 def network_module():
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nNetwork scanning...")
     networkArtifact = "Windows.Network.Scan"
     query = f"Select * from Artifact.{networkArtifact}()"
     output = Run_velociraptor_query(query)
     correctSyntax = re.sub(r"\]\[", ",",output)
     parsed = eval(correctSyntax)
     result = []
+    print(parsed)
     for i in parsed:
         check = check_virustotal("check_ip", i['DestIP'])
         if check == 1:
