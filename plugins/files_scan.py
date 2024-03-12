@@ -16,9 +16,12 @@ def fileScan_module():
             if check == 1:
                 print("File Path: " + i['OSPath'])
                 result.extend(i)
+        return result
     else:
+        for i in parsed:
+            print("File Path: " + i['OSPath'])
         return parsed
-    return result
+    
 
 
 if __name__ == "__main__":
