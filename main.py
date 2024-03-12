@@ -13,10 +13,12 @@ from plugins.process_scan import process_module
 from plugins.network import network_module  
 from plugins.registry import registry_module
 from plugins.files_scan import fileScan_module
+from plugins.wmi import wmi_module
 
 if __name__ == "__main__":
 
         parser = argparse.ArgumentParser(description="Hera is not thor")
+        parser.add_argument("-cl", "--collect", action="store_true", help="Collect event log files")
         parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose")
         args = parser.parse_args()
 
@@ -26,23 +28,26 @@ if __name__ == "__main__":
         command = [velociraptor_executable, "--definitions", artifacts_folder, "--config", server_config, "frontend"]
         # print(command)
         try:
-                cwd = os.getcwd()
-                outputFolder = create_new_folder(extract_base_folder(cwd), "output")
+                outputFolder = create_new_folder(".", "output")
+                extractFolder = create_new_folder(outputFolder,"extract")
+                systeminfoFolder = create_new_folder(".", "system_info")
                 server = subprocess.Popen(command, shell=True)
-                # systeminfoFolder = create_new_folder(".", "system_info")
-                # extractFolder = create_new_folder(".", "extract")
-                # collect_system_info()
-                # collect_OBJECT_DATA(extractFolder)
-                # collect_necessary_evtx(extractFolder)
-                # collect_evtx_file(extractFolder)
-                # event_log_module(outputFolder)
-                # process_module()
+                collect_system_info()
+                collect_OBJECT_DATA(extractFolder,args.verbose)
+                if args.collect:
+                        collect_evtx_file(extractFolder,args.verbose)
+                event_log_module(outputFolder)
+                wmi_module(extractFolder,outputFolder)
+                process_module()
                 network_module()
-                # registry_module()
-                # fileScan_module()
-                # create_report()
+                registry_module()
+                fileScan_module()
+                create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")
         finally:
-                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                server.terminate()
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # Optional: hide window
+                process = subprocess.Popen(["taskkill", "/F", "/T", "/PID", str(server.pid)], startupinfo=startupinfo)
+                process.wait()
+                print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
