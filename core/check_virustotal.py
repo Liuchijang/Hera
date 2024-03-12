@@ -9,3 +9,13 @@ def check_virustotal(mode, value):
     else:
         print(f"Error: {response.status_code} - {response.text}")
         return 0
+
+def check_connect():
+    url = "https://fastapivirustotal-production.up.railway.app"
+    try:
+      response = requests.get(url)
+      response.raise_for_status()  # Raise an exception for non-2xx status codes
+      return True
+    except requests.exceptions.RequestException as e:
+      print("Can not connented to internet!\nPlease check the internet conection.\n\n")
+      return False
