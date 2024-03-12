@@ -36,17 +36,19 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser(description="Hera is not thor")
         parser.add_argument("-cl", "--collect", action="store_true", help="Collect event log files")
         parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose")
-        args = parser.parse_args()
-        subprocess.run([".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe", "--config", ".\\config\\server.config.yaml", "config", "api_client", "--name", "admin", "--role", "administrator", ".\\config\\api.config.yaml"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        args = parser.parse_args()   
         velociraptor_executable = ".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
         artifacts_folder = ".\\data\\artifacts"
         server_config = ".\\config\\server.config.yaml"
+        api_config = ".\\config\\api.config.yaml"
+        create_api_config_command = [velociraptor_executable, "--config", server_config, "config", "api_client", "--name", "admin", "--role", "administrator", api_config]
+        subprocess.run(create_api_config_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         command = [velociraptor_executable, "--definitions", artifacts_folder, "--config", server_config, "frontend"]
         # print(command)
         try:
                 outputFolder = create_new_folder(".", "output")
                 extractFolder = create_new_folder(outputFolder,"extract")
-                systeminfoFolder = create_new_folder(".", "system_info")
+                # systeminfoFolder = create_new_folder(".", "system_info")
                 server = subprocess.Popen(command, shell=True)
                 collect_system_info()
                 collect_OBJECT_DATA(extractFolder,args.verbose)

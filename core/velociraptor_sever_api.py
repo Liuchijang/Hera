@@ -22,6 +22,8 @@ def run(config, query):
         stub = api_pb2_grpc.APIStub(channel)
 
         request = api_pb2.VQLCollectorArgs(
+            max_wait=99999,
+            max_row=99999,
             Query=[api_pb2.VQLRequest(
                 Name="Hunt",
                 VQL=query,
