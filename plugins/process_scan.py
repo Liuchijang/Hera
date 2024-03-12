@@ -8,7 +8,8 @@ def process_module():
     artifact = "Windows.Memory.LocalHollowsHunter"
     query = "select * from Artifact.{}()".format(artifact)
     Run_velociraptor_query(query)
-    with open(".\output\HollowsHunter\summary.json","r") as file:
+    #with open(".\output\HollowsHunter\summary.json","r") as file:
+    with open(r".\output\HollowsHunter\summary.json","r") as file:
         output = file.read()
         parsedOutput = eval(output)
         # verbose: print output to screen
@@ -20,7 +21,8 @@ def process_module():
         for suspicious in parsedOutput['suspicious']:
             print("Process ID:",suspicious['pid'])
             print("Process Name:",suspicious['name'])
-            with open(f".\output\HollowsHunter\process_{suspicious['pid']}\scan_report.json") as proc:   
+            #with open(f".\output\HollowsHunter\process_{suspicious['pid']}\scan_report.json") as proc:
+            with open(rf".\output\HollowsHunter\process_{suspicious['pid']}\scan_report.json") as proc:
                 data = eval(proc.read())
                 print("Image Fullpath:",data['main_image_path'])
                 for i in data['scans']:
