@@ -16,12 +16,21 @@ from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
 
 if __name__ == "__main__":
+        def is_admin():
+                try:
+                        return ctypes.windll.shell32.IsUserAnAdmin()
+                except:
+                        return False
 
+        if not is_admin():
+                print("Please run as an administrator!")
+                sys.exit() 
+               
         parser = argparse.ArgumentParser(description="Hera is not thor")
         parser.add_argument("-cl", "--collect", action="store_true", help="Collect event log files")
         parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose")
         args = parser.parse_args()
-
+        subprocess.run([".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe", "--config", ".\\config\\server.config.yaml", "config", "api_client", "--name", "admin", "--role", "administrator", ".\\config\\api.config.yaml"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         velociraptor_executable = ".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
         artifacts_folder = ".\\data\\artifacts"
         server_config = ".\\config\\server.config.yaml"
