@@ -16,13 +16,15 @@ def fileScan_module():
             if check == 1:
                 print("File Path: " + i['OSPath'])
                 result.extend(i)
-        return result
     else:
+        with open("./data/malicious_MD5.txt", "r") as f:
+            malicious_MD5 = set(line.strip() for line in f)
         for i in parsed:
-            print("File Path: " + i['OSPath'])
-        return parsed
+            if i['MD5'] in malicious_MD5:
+                print("File Path: " + i['OSPath'])
+                result.extend(i)
+    return result
     
-
 
 if __name__ == "__main__":
     fileScan_module()
