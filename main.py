@@ -15,13 +15,20 @@ from plugins.registry import registry_module
 from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
 
-if __name__ == "__main__":
+if __name__ == "__main__":  
+        def check_port(port):
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                result = sock.connect_ex(('localhost', port))
+                sock.close()
+                return result == 0             
         def is_admin():
                 try:
                         return ctypes.windll.shell32.IsUserAnAdmin()
                 except:
-                        return False
-
+                        return False           
+        if check_port(8001):
+                print("Port 8001 is already in use!")
+                sys.exit()             
         if not is_admin():
                 print("Please run as an administrator!")
                 sys.exit() 
