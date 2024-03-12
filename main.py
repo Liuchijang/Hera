@@ -37,6 +37,7 @@ if __name__ == "__main__":
                 if args.collect:
                         collect_evtx_file(extractFolder,args.verbose)
                 event_log_module(outputFolder)
+                wmi_module(extractFolder,outputFolder)
                 process_module()
                 network_module()
                 registry_module()
