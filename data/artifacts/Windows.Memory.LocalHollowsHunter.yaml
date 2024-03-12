@@ -33,6 +33,10 @@ sources:
            "/hooks",
            "/obfusc", 3,
            "/shellc", 3, 
+           "/refl", 
+           "/data", 5,
+           "/iat", 2, 
+           "/dnet", 4,
            "/json", "/dir", HollowsHunterOutput], sep="\n")
       -- Print detected processes and its information to screen
       LET Parsing <= SELECT split(string=Stdout,sep=' ')[2] as Detected
