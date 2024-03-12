@@ -44,5 +44,8 @@ if __name__ == "__main__":
         except Exception as e:
                 print(f"An error occurred: {e}")
         finally:
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # Optional: hide window
+                process = subprocess.Popen(["taskkill", "/F", "/T", "/PID", str(server.pid)], startupinfo=startupinfo)
+                process.wait()
                 print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                server.terminate()
