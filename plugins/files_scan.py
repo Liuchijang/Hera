@@ -1,6 +1,6 @@
 import re
 from core.velociraptor_sever_api import Run_velociraptor_query
-from core.check_virustotal import check_virustotal
+from core.check_virustotal import *
 
 def fileScan_module():
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nFiles scanning...")
@@ -10,11 +10,14 @@ def fileScan_module():
     correctSyntax = re.sub(r"\]\[", ",",output)
     parsed = eval(correctSyntax)
     result = []
-    for i in parsed:
-        check = check_virustotal("check_hash", i['MD5'])
-        if check == 1:
-            print(i['OSPath'])
-            result.extend(i)
+    if check_connect():
+        for i in parsed:
+            check = check_virustotal("check_hash", i['MD5'])
+            if check == 1:
+                print("File Path: " + i['OSPath'])
+                result.extend(i)
+    else:
+        return parsed
     return result
 
 

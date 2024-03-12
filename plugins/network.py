@@ -1,6 +1,6 @@
 import re
 from core.velociraptor_sever_api import Run_velociraptor_query
-from core.check_virustotal import check_virustotal
+from core.check_virustotal import *
 
 def network_module():
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nNetwork scanning...")
@@ -10,12 +10,19 @@ def network_module():
     correctSyntax = re.sub(r"\]\[", ",",output)
     parsed = eval(correctSyntax)
     result = []
-    print(parsed)
-    for i in parsed:
-        check = check_virustotal("check_ip", i['DestIP'])
-        if check == 1:
-            print(i["Path"] + '\n' + i["CommandLine"] + '\n' + i["DestIP"] + '\n')
-            result.extend(i)
+    if check_connect():
+        for i in parsed:
+            check = check_virustotal("check_ip", i['DestIP'])
+            if check == 1:
+                print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
+                result.extend(i)
+    else:
+        with open("./data/malicious_ip.txt", "r") as f:
+            malicious_ip = set(line.strip() for line in f)
+        for i in parsed:
+            if i['DestIP'] in malicious_ip:
+                print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
+                result.extend(i)
     return result
 
 if __name__ == "__main__":
