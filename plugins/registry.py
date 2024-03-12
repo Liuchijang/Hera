@@ -28,7 +28,7 @@ def registry_module():
         parsed = eval(correctSyntax)
         data.extend(parsed)
     for i in data:
-        print(i['ValueName'])
+        print("Path: " + i['ValueName'] + "\n" + "Value:" + str(i['Contents']) + "\n")
 
 
 if __name__ == "__main__":

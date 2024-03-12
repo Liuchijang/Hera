@@ -58,7 +58,7 @@ parameters:
    default: N
  - name: MinimalLevel
    description: "Minimum level for rules"
-   default: informational
+   default: medium
    type: choices
    choices:
      - informational
@@ -99,7 +99,7 @@ sources:
         LET ResultFile <= str(str=OSPath[0].curDir) + '\\..\\output\\event-log-module-results.' + OutputFormat
         LET HayabusaExe <= str(str=OSPath[0].HYabsolutePath)
         LET CurrentDir <= str(str=OSPath[0].curDir)
-        LET LogsPath <= str(str=OSPath[0].curDir)+ '\\..\\extract' 
+        -- LET LogsPath <= str(str=OSPath[0].curDir)+ '\\..\\extract' 
 
 
         -- Optionally update the rules
@@ -111,7 +111,7 @@ sources:
         -- Build the command line considering all options
         -- If it does not match if(condition...), it returns Null, so remove Null with filter(....regex=".+")
         LET cmdline <= filter(list=(
-          HayabusaExe, HayabusaCmd, "--directory", LogsPath,
+          HayabusaExe, HayabusaCmd, "--live-analysis",
           "--clobber",
           "--no-wizard", 
           "--output", ResultFile,
