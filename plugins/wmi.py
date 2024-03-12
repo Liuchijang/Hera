@@ -1,83 +1,3 @@
-#!/usr/bin/env python
-# 
-# PyWMIPersistenceFinder.py
-# Version 1.1
-#
-# Author:
-#   David Pany - Mandiant (FireEye) - 2017
-#   Twitter: @DavidPany
-#   Please send  comments, bug reports, and questions to @DavidPany
-#       or push changes directly to GitHub
-#
-# Usage:
-#   PyWMIPersistenceFinder.py <OBJECTS.DATA file>
-#
-#   The output is text based in the following format for each binding:
-#       <consumer name>-<filter name>
-#               <optional notes>
-#           Consumer: <consumer name><consumer execution details>
-#           Filter: <filter name><filter listener details>
-#
-# Execution time:
-#   Execution time has been reported from 10 seconds to 5 minutes depending on input size.
-#
-# Description:
-#   PyWMIPersistenceFinder.py is designed to find WMI persistence via FitlerToConsumerBindings
-#   solely by keyword searching the OBJECTS.DATA file without parsing the full WMI repository.
-#
-#   In testing, this script has found the exact same data as python-cim's
-#   show_FilterToConsumerBindings.py without requiring the setup. Only further testing will
-#   indicate if this script misses any data that python-cim can find.
-#
-#   In theory, this script will detect FilterToConsumerBindings that are deleted and remain
-#   in unallocated WMI space, but I haven't had a chance to test yet.
-#
-# Terms:
-#   Event Filter:
-#       Basically a condition that WMI is waiting for
-#
-#   Event Consumer:
-#       Basically something that will happen such as script/file execution
-#
-#   Filter To Consumer Binding:
-#       Structure that says "When filter condition happens, execute consumer"
-#
-# Changes:
-#   1.1 - removed newline characters for regex matching
-#       - enhanced txt output for readability
-#
-# Future Improvements:
-#   [ ] Implement named regex groups for clarity
-#   [ ] Add CSV output option
-#   [ ] Add input option for a directory of objects.data files
-#
-# References:
-#   https://github.com/fireeye/flare-wmi/tree/master/python-cim
-#   https://www.fireeye.com/content/dam/fireeye-www/global/en/current-threats/pdfs/wp-windows-management-instrumentation.pdf
-#
-# License:
-#   Copyright (c) 2017 David Pany
-#
-#   Permission is hereby granted, free of charge, to any person obtaining a copy
-#   of this software and associated documentation files (the "Software"), to deal
-#   in the Software without restriction, including without limitation the rights
-#   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#   copies of the Software, and to permit persons to whom the Software is
-#   furnished to do so, subject to the following conditions:
-#
-#   The above copyright notice and this permission notice shall be included in
-#   all copies or substantial portions of the Software.
-#
-#   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#   SOFTWARE.
-#
-
-
 import sys
 import os
 import re
@@ -85,14 +5,14 @@ import string
 
 PRINTABLE_CHARS = set(string.printable)
 
-def wmi_module(outputFolder = None):
+def wmi_module(inputFolder, outputFolder = None):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nWMI scanning...")
     """Main function for everything!"""
 
     # print("\n    Enumerating FilterToConsumerBindings...")
 
     #Read objects.data 4 lines at a time to look for bindings
-    objects_file = open(sys.argv[1], "rb")
+    objects_file = open(f"{inputFolder}\\OBJECTS.DATA", "rb")
     current_line = objects_file.readline()
     lines_list = [current_line]
     current_line = objects_file.readline()
@@ -146,10 +66,10 @@ def wmi_module(outputFolder = None):
 
     # Close the file and look for consumers and filters
     objects_file.close()
-    print("    {} FilterToConsumerBinding(s) Found. Enumerating Filters and Consumers..."
+    print("    {} FilterToConsumerBinding(s) Found."
           .format(len(bindings_dict)))
     # Read objects.data 4 lines at a time to look for filters and consumers
-    objects_file = open(sys.argv[1], "rb")
+    objects_file = open(f"{inputFolder}\\OBJECTS.DATA", "rb")
     current_line = objects_file.readline()
     lines_list = [current_line]
     current_line = objects_file.readline()
@@ -218,8 +138,9 @@ def wmi_module(outputFolder = None):
     # Print results to stdout. CSV will be in future version.
     if outputFolder:
         filepath = os.path.join(outputFolder,"wmi-module-output.txt")
+        print(f"Scan WMI completed, saved output in {filepath}")
         with open(filepath, "w") as file:
-            file.write("\n    Bindings:\n")
+            file.write("    Bindings:\n")
             for binding_name, binding_details in bindings_dict.items():
                 if (
                         "BVTConsumer-BVTFilter" in binding_name or
