@@ -17,18 +17,22 @@ folder_path = ".//data//artifacts"
 artifacts = get_registry_yaml_files(folder_path)
 
 
-def registry_module():
+def registry_module(outputFolder, save_to_file=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nRegistry scanning...")
     query = ""
-    data = []
+    result = []
     for artifact in artifacts:
         query = "select * from Artifact.{}()".format(artifact)
         output = Run_velociraptor_query(query)
         correctSyntax = re.sub(r"\]\[", ",",output)
         parsed = eval(correctSyntax)
-        data.extend(parsed)
-    for i in data:
+        result.extend(parsed)
+    for i in result:
         print("Path: " + i['ValueName'] + "\n" + "Value:" + str(i['Contents']) + "\n")
+    if save_to_file:
+        filepath = os.path.join(outputFolder,"Registry_module.json")
+        with open(filepath, 'wb') as f:
+            f.write(result.encode('utf8', 'ignore'))
 
 
 if __name__ == "__main__":

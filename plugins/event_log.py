@@ -3,7 +3,7 @@ import re
 from core.velociraptor_sever_api import Run_velociraptor_query
 
 
-def event_log_module(outputFolder):
+def event_log_module(outputFolder, save_to_file=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nEventLogs scanning...")
     artifact = "Windows.EventLogs.LocalHayabusa"
     query = "select * from Artifact.{}()".format(artifact)
@@ -15,8 +15,9 @@ def event_log_module(outputFolder):
     # Optionally write output to file
     filepath = os.path.join(outputFolder,"Event_log_module_commandLine_log.json")
 
-    with open(filepath, 'wb') as f:
-        f.write(output.encode('utf8', 'ignore'))
+    if save_to_file:
+        with open(filepath, 'wb') as f:
+            f.write(output.encode('utf8', 'ignore'))
 
 if __name__ == "__main__":
     event_log_module()

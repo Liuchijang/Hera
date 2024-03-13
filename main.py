@@ -35,6 +35,7 @@ if __name__ == "__main__":
                
         parser = argparse.ArgumentParser(description="Hera is not thor")
         parser.add_argument("-cl", "--collect", action="store_true", help="Collect event log files")
+        parser.add_argument("-sf", "--save", action="store_true", help="Save output to file")
         parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose")
         args = parser.parse_args()   
         velociraptor_executable = ".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
@@ -57,9 +58,9 @@ if __name__ == "__main__":
                 event_log_module(outputFolder)
                 wmi_module(extractFolder,outputFolder)
                 process_module()
-                network_module()
-                registry_module()
-                fileScan_module()
+                network_module(outputFolder)
+                registry_module(outputFolder)
+                fileScan_module(outputFolder)
                 create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")
