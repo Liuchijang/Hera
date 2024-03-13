@@ -1,8 +1,9 @@
+import os
 import re
 from core.velociraptor_sever_api import Run_velociraptor_query
 from core.check_virustotal import *
 
-def fileScan_module():
+def fileScan_module(outputFolder, save_to_file=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nFiles scanning...")
     artifact = "Files.scan"
     query = "select * from Artifact.{}()".format(artifact)
@@ -23,6 +24,10 @@ def fileScan_module():
             if i['MD5'] in malicious_MD5:
                 print("File Path: " + i['OSPath'])
                 result.extend(i)
+    if save_to_file:
+        filepath = os.path.join(outputFolder,"Files_module.json")
+        with open(filepath, 'wb') as f:
+            f.write(result.encode('utf8', 'ignore'))
     return result
     
 

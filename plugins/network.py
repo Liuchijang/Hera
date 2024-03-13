@@ -1,8 +1,9 @@
+import os
 import re
 from core.velociraptor_sever_api import Run_velociraptor_query
 from core.check_virustotal import *
 
-def network_module():
+def network_module(outputFolder, save_to_file=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nNetwork scanning...")
     networkArtifact = "Windows.Network.Scan"
     query = f"Select * from Artifact.{networkArtifact}()"
@@ -23,6 +24,10 @@ def network_module():
             if i['DestIP'] in malicious_ip:
                 print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
                 result.extend(i)
+    if save_to_file:
+        filepath = os.path.join(outputFolder,"Network_module.json")
+        with open(filepath, 'wb') as f:
+            f.write(result.encode('utf8', 'ignore'))
     return result
 
 if __name__ == "__main__":
