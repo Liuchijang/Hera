@@ -17,5 +17,5 @@ def check_connect():
       response.raise_for_status()  # Raise an exception for non-2xx status codes
       return True
     except requests.exceptions.RequestException as e:
-      print("Can not connented to internet!\nPlease check the internet conection.\n\n")
+      print("Can not connect to internet!\nPlease check your Internet connection.\n\n")
       return False
