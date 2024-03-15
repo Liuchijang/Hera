@@ -70,11 +70,11 @@ def collect_necessary_evtx(outputFolder, verbose=False):
     system_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/System/File"
     application_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Application/File"
     security_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Security/File"
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ", False)   
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ")   
     system_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ", False) 
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ") 
     application_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ", False) 
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ") 
     security_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
     default_log_path = "C:/Windows/system32/winevt/logs"
     sourceFolderList = [default_log_path, extract_base_folder(system_log_path), extract_base_folder(application_log_path), extract_base_folder(security_log_path)]
@@ -94,7 +94,7 @@ def collect_necessary_evtx(outputFolder, verbose=False):
     for i in uniqueSourceFolderList:
         for k in list_files:
             query1 = f"SELECT Name, OSPath, Size as RawSize, humanize(bytes=Size) as Size, Mode.String, Mtime FROM glob(globs='{i}/{k}') "
-            output = Run_velociraptor_query(query1,False)
+            output = Run_velociraptor_query(query1)
             list_evtx_files= re.sub(r"\]\[", ",",output)
             parsed = eval(list_evtx_files)
             for j in parsed:
@@ -112,11 +112,11 @@ def collect_evtx_file(outputFolder, verbose=False):
     system_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/System/File"
     application_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Application/File"
     security_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Security/File"
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ", False)   
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{system_log_key_path}', accessor='reg') ")   
     system_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ", False) 
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{application_log_key_path}', accessor='reg') ") 
     application_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
-    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ", False) 
+    output = Run_velociraptor_query(f"SELECT * FROM glob(globs='{security_log_key_path}', accessor='reg') ") 
     security_log_path = os.path.expandvars(eval(output)[0]["Data"]["value"].lower())
     default_log_path = "C:/Windows/system32/winevt/logs"
     sourceFolderList = [default_log_path, extract_base_folder(system_log_path), extract_base_folder(application_log_path), extract_base_folder(security_log_path)]
@@ -124,7 +124,7 @@ def collect_evtx_file(outputFolder, verbose=False):
     
     for i in uniqueSourceFolderList:
         query1 = f"SELECT Name, OSPath, Size as RawSize, humanize(bytes=Size) as Size, Mode.String, Mtime FROM glob(globs='{i}/*.evtx') "
-        output = Run_velociraptor_query(query1,False)
+        output = Run_velociraptor_query(query1)
         list_evtx_files= re.sub(r"\]\[", ",",output)
         parsed = eval(list_evtx_files)
         for j in parsed:
@@ -141,7 +141,7 @@ def collect_evtx_file(outputFolder, verbose=False):
 def collect_OBJECT_DATA(outputFolder,verbose=False):
     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nCollecting WMI Repository...")
     query = "SELECT Name, OSPath, Size as RawSize, humanize(bytes=Size) as Size, Mode.String, Mtime FROM glob(globs='C:/Windows/system32/wbem/Repository/**/OBJECTS.DATA',accessor='ntfs')"
-    output = Run_velociraptor_query(query,False)
+    output = Run_velociraptor_query(query)
     parsed = eval(output)
     for i in parsed:
         source = re.sub(r"\\", "/", i["OSPath"])
@@ -194,18 +194,6 @@ def create_report():
                 endTime,
                 scanID
         )
-    
-def is_admin():
-        try:
-                return ctypes.windll.shell32.IsUserAnAdmin()
-        except:
-                return False
-        
-def check_port(port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = sock.connect_ex(('localhost', port))
-        sock.close()
-        return result == 0 
 
 
 if __name__ == "__main__":
