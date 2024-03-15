@@ -8,7 +8,6 @@ def process_module(verbose=False):
     artifact = "Windows.Memory.LocalHollowsHunter"
     query = "select * from Artifact.{}()".format(artifact)
     Run_velociraptor_query(query)
-    #with open(".\output\HollowsHunter\summary.json","r") as file:
     with open(r".\output\HollowsHunter\summary.json","r") as file:
         output = file.read()
         parsedOutput = eval(output)
