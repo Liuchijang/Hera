@@ -3,20 +3,21 @@ import re
 from core.velociraptor_sever_api import Run_velociraptor_query
 
 
-def event_log_module(outputFolder=None, verbose=False, save_to_file=False):
+def event_log_module(verbose=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nEventLogs scanning...")
     artifact = "Windows.EventLogs.LocalHayabusa"
     query = "select * from Artifact.{}()".format(artifact)
-    output = Run_velociraptor_query(query)
-    parse = eval(output)
+    Run_velociraptor_query(query)
+    result = []
+    filepath = ".\output\event-log-module-output.jsonl"
+    with open(filepath,"r") as file:
+        for line in file:
+            result.append(eval(line))
     if verbose:
-        for i in parse:
-            if '\"Timestamp\"' in i['Stdout']:
-                print("\nTimestamp:",i['Stdout'].split("\"")[3])
-            if '\"RuleTitle\"' in i['Stdout']:
-                print("RuleTitle:",i['Stdout'].split("\"")[3])
+        for i in result:
+            print("Timestamp:",i['Timestamp'],"\nRule Title:",i['RuleTitle'],"\n")
     print("Scan Event logs completed.")
-    return parse
+    return result
 
 if __name__ == "__main__":
     event_log_module()
