@@ -14,18 +14,9 @@ from plugins.network import network_module
 from plugins.registry import registry_module
 from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
+from core.condition import *
 
-if __name__ == "__main__":  
-        def check_port(port):
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                result = sock.connect_ex(('localhost', port))
-                sock.close()
-                return result == 0             
-        def is_admin():
-                try:
-                        return ctypes.windll.shell32.IsUserAnAdmin()
-                except:
-                        return False           
+if __name__ == "__main__":          
         if check_port(8001):
                 print("Port 8001 is already in use!")
                 sys.exit()             
