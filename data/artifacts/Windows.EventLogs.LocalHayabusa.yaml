@@ -112,14 +112,11 @@ sources:
         -- If it does not match if(condition...), it returns Null, so remove Null with filter(....regex=".+")
         LET cmdline <= filter(list=(
           HayabusaExe, HayabusaCmd, "--live-analysis",
-          "--clobber",
           "--no-wizard", 
-          "--output", ResultFile,
           "--min-level", MinimalLevel,
           "--profile", OutputProfile,
           "--quiet", "--no-summary",
           "--threads", str(str=Threads),
-          if(condition=OutputFormat = "jsonl", then="-L"),
           if(condition=UTC, then="--UTC"),
           if(condition=NoisyRules, then="--enable-noisy-rules"),
           if(condition=EIDFilter, then="--eid-filter"),
@@ -136,17 +133,6 @@ sources:
         ), regex=".+")
 
         -- Run the tool and divert messages to logs.
-        LET ExecHB <= SELECT *
+        SELECT Stdout
         FROM execve(argv=cmdline, sep="\n", length=9999999)
         
-        SELECT * FROM ExecHB
-        -- Upload the raw file.
-        SELECT upload(file=ResultFile) AS Uploads FROM scope()
-
- - name: Results
-   query: |
-        LET CSV_RESULT  = SELECT * FROM parse_csv(filename=ResultFile)
-        LET JSONL_RESULT = SELECT * FROM parse_jsonl(filename=ResultFile)
-        
-        SELECT *, timestamp(string=Timestamp) AS EventTime
-        FROM if(condition= OutputFormat = "csv", then=CSV_RESULT, else=JSONL_RESULT)

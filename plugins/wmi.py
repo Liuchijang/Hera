@@ -5,7 +5,63 @@ import string
 
 PRINTABLE_CHARS = set(string.printable)
 
-def wmi_module(inputFolder, outputFolder = None):
+def write_output(bindings_dict, consumer_dict, filter_dict, outputFolder):
+    # Write output to specified file 
+    filepath = os.path.join(outputFolder,"wmi-module-output.txt")
+    print(f"Saved output in {filepath}")
+    with open(filepath, "w") as file:
+        file.write("    Bindings:\n")
+        for binding_name, binding_details in bindings_dict.items():
+            if (
+                    "BVTConsumer-BVTFilter" in binding_name or
+                    "SCM Event Log Consumer-SCM Event Log Filter" in binding_name):
+                file.write(
+                    "        {}\n                (Common binding based on consumer and filter names,"
+                    " possibly legitimate)".format(binding_name))
+            else:
+                file.write("        {}".format(binding_name))
+            event_filter_name = binding_details["event_filter_name"]
+            event_consumer_name = binding_details["event_consumer_name"]
+
+            # Print binding details if available
+            if consumer_dict[event_consumer_name]:
+                for event_consumer_details in consumer_dict[event_consumer_name]:
+                    file.write("\n            Consumer: {}".format(event_consumer_details))
+            else:
+                file.write("\n            Consumer: {}".format(event_consumer_name))
+
+            # Print details for each filter found for this filter name
+            for event_filter_details in filter_dict[event_filter_name]:
+                file.write("\n            Filter: {}".format(event_filter_details))
+                file.write("")
+
+def print_output(bindings_dict, consumer_dict, filter_dict):
+    print("    Bindings:\n")
+    for binding_name, binding_details in bindings_dict.items():
+        if (
+                "BVTConsumer-BVTFilter" in binding_name or
+                "SCM Event Log Consumer-SCM Event Log Filter" in binding_name):
+            print(
+                "        {}\n                (Common binding based on consumer and filter names,"
+                " possibly legitimate)".format(binding_name))
+        else:
+            print("        {}".format(binding_name))
+        event_filter_name = binding_details["event_filter_name"]
+        event_consumer_name = binding_details["event_consumer_name"]
+
+        # Print binding details if available
+        if consumer_dict[event_consumer_name]:
+            for event_consumer_details in consumer_dict[event_consumer_name]:
+                print("\n            Consumer: {}".format(event_consumer_details))
+        else:
+            print("\n            Consumer: {}".format(event_consumer_name))
+
+        # Print details for each filter found for this filter name
+        for event_filter_details in filter_dict[event_filter_name]:
+            print("\n            Filter: {}".format(event_filter_details))
+            print("")
+
+def wmi_module(inputFolder, outputFolder = None, verbose=False, savefile=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nWMI scanning...")
     """Main function for everything!"""
 
@@ -135,45 +191,15 @@ def wmi_module(inputFolder, outputFolder = None):
         lines_list.pop(0)
     objects_file.close()
     
-    # Print results to stdout. CSV will be in future version.
-    if outputFolder:
-        filepath = os.path.join(outputFolder,"wmi-module-output.txt")
-        print(f"Scan WMI completed, saved output in {filepath}")
-        with open(filepath, "w") as file:
-            file.write("    Bindings:\n")
-            for binding_name, binding_details in bindings_dict.items():
-                if (
-                        "BVTConsumer-BVTFilter" in binding_name or
-                        "SCM Event Log Consumer-SCM Event Log Filter" in binding_name):
-                    file.write(
-                        "        {}\n                (Common binding based on consumer and filter names,"
-                        " possibly legitimate)".format(binding_name))
-                else:
-                    file.write("        {}".format(binding_name))
-                event_filter_name = binding_details["event_filter_name"]
-                event_consumer_name = binding_details["event_consumer_name"]
+    # write results to file. 
+    if savefile:
+        write_output(bindings_dict,consumer_dict,filter_dict,outputFolder)
+    #print result to screen
+    if verbose:
+        print_output(bindings_dict,consumer_dict,filter_dict)
+    print("Scan WMI repository completed.")
 
-                # Print binding details if available
-                if consumer_dict[event_consumer_name]:
-                    for event_consumer_details in consumer_dict[event_consumer_name]:
-                        file.write("\n            Consumer: {}".format(event_consumer_details))
-                else:
-                    file.write("\n            Consumer: {}".format(event_consumer_name))
 
-                # Print details for each filter found for this filter name
-                for event_filter_details in filter_dict[event_filter_name]:
-                    file.write("\n            Filter: {}".format(event_filter_details))
-                    file.write("")
-    else: 
-        print("Binding dictionary:",bindings_dict)
-        print("Filter dictionary:",filter_dict)
-        print("Consumer dictionary:",consumer_dict)
-
-    # Print closing message
-    # print("\n    Thanks for using PyWMIPersistenceFinder! Please contact @DavidPany with "
-    #       "questions, bugs, or suggestions.\n\n    Please review FireEye's whitepaper "
-    #       "for additional WMI persistence details:\n        https://www.fireeye.com/content/dam"
-    #       "/fireeye-www/global/en/current-threats/pdfs/wp-windows-management-instrumentation.pdf")
 
 
 

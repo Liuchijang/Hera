@@ -14,18 +14,9 @@ from plugins.network import network_module
 from plugins.registry import registry_module
 from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
+from core.condition import *
 
-if __name__ == "__main__":  
-        def check_port(port):
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                result = sock.connect_ex(('localhost', port))
-                sock.close()
-                return result == 0             
-        def is_admin():
-                try:
-                        return ctypes.windll.shell32.IsUserAnAdmin()
-                except:
-                        return False           
+if __name__ == "__main__":          
         if check_port(8001):
                 print("Port 8001 is already in use!")
                 sys.exit()             
@@ -49,18 +40,18 @@ if __name__ == "__main__":
         try:
                 outputFolder = create_new_folder(".", "output")
                 extractFolder = create_new_folder(outputFolder,"extract")
-                # systeminfoFolder = create_new_folder(".", "system_info")
+                systeminfoFolder = create_new_folder(".", "system_info")
                 server = subprocess.Popen(command, shell=True)
                 # collect_system_info()
                 # collect_OBJECT_DATA(extractFolder,args.verbose)
-                # if args.collect:
-                #         collect_evtx_file(extractFolder,args.verbose)
-                # event_log_module(outputFolder)
-                # wmi_module(extractFolder,outputFolder)
-                # process_module()
-                # network_module(outputFolder)
-                # registry_module(outputFolder)
-                fileScan_module(outputFolder)
+                if args.collect:
+                        collect_evtx_file(extractFolder,args.verbose)
+                event_log_module(outputFolder, args.verbose, args.save)
+                # wmi_module(extractFolder,outputFolder,args.verbose,args.save)
+                # process_module(args.verbose)
+                # network_module(outputFolder,args.verbose)
+                # registry_module(outputFolder,args.save,args.verbose)
+                # fileScan_module(outputFolder,args.verbose)
                 create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")

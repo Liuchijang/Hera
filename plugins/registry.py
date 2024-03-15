@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from core.velociraptor_sever_api import Run_velociraptor_query
 
 
@@ -17,7 +18,7 @@ folder_path = ".//data//artifacts"
 artifacts = get_registry_yaml_files(folder_path)
 
 
-def registry_module(outputFolder, save_to_file=False):
+def registry_module(outputFolder, verbose=False, save_to_file=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nRegistry scanning...")
     query = ""
     result = []
@@ -27,12 +28,15 @@ def registry_module(outputFolder, save_to_file=False):
         correctSyntax = re.sub(r"\]\[", ",",output)
         parsed = eval(correctSyntax)
         result.extend(parsed)
-    for i in result:
-        print("Path: " + i['ValueName'] + "\n" + "Value:" + str(i['Contents']) + "\n")
+    if verbose:
+        for i in result:
+            print("Path: " + i['ValueName'] + "\n" + "Value:" + str(i['Contents']) + "\n")
     if save_to_file:
         filepath = os.path.join(outputFolder,"Registry_module.json")
-        with open(filepath, 'wb') as f:
-            f.write(result.encode('utf8', 'ignore'))
+        with open(filepath, 'w') as f:
+            json.dump(result,f,indent=4)
+            print(f"Saved Registry module output at {filepath}")
+    print("Scan Registry hives completed.")
 
 
 if __name__ == "__main__":
