@@ -3,37 +3,35 @@ import re
 from core.velociraptor_sever_api import Run_velociraptor_query
 
 
-def process_module(verbose=False):
+def process_module(outputFolder, verbose=False, save_to_file=False):
     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nProcesses scanning...")
     artifact = "Windows.Memory.LocalHollowsHunter"
     query = "select * from Artifact.{}()".format(artifact)
     Run_velociraptor_query(query)
+    #with open(".\output\HollowsHunter\summary.json","r") as file:
     with open(r".\output\HollowsHunter\summary.json","r") as file:
         output = file.read()
         parsedOutput = eval(output)
         # verbose: print output to screen
-        if verbose:
-            print("Process Scan time:",parsedOutput['scan_date_time'],
-                "\nTotal scan time in ms:",parsedOutput['scan_time_ms'],
-                "\nTotal scanned processes:",parsedOutput['scanned_count'],
-                "\nSuspicious process count:",parsedOutput['suspicious_count'],
-                "\n+++++++++++++ Suspicious processes infomartion +++++++++++++")
-            for suspicious in parsedOutput['suspicious']:
-                print("Process ID:",suspicious['pid'])
-                print("Process Name:",suspicious['name'])
-                #with open(f".\output\HollowsHunter\process_{suspicious['pid']}\scan_report.json") as proc:
-                with open(rf".\output\HollowsHunter\process_{suspicious['pid']}\scan_report.json") as proc:
-                    data = eval(proc.read())
-                    print("Image Fullpath:",data['main_image_path'])
-                    for i in data['scans']:
-                        if 'code_scan' in i:
-                            print("Suspicious Module (Triggered by code scan):",i['code_scan']['module_file'])
-                        if 'mapping_scan' in i:
-                            print("Suspicious Module (Triggered by mapping scan):",i['mapping_scan']['mapped_file'])
-                            print("\t\t\t\t\t      ",i['mapping_scan']['module_file'])
-                print("")
-        print("Scan Processes completed.")
-        return parsedOutput
+        print("Process Scan time:",parsedOutput['scan_date_time'],
+              "\nTotal scan time in ms:",parsedOutput['scan_time_ms'],
+              "\nTotal scanned processes:",parsedOutput['scanned_count'],
+              "\nSuspicious process count:",parsedOutput['suspicious_count'],
+              "\n+++++++++++++ Suspicious processes infomartion +++++++++++++")
+        for suspicious in parsedOutput['suspicious']:
+            print("Process ID:",suspicious['pid'])
+            print("Process Name:",suspicious['name'])
+            #with open(f".\output\HollowsHunter\process_{suspicious['pid']}\scan_report.json") as proc:
+            with open(rf".\output\HollowsHunter\process_{suspicious['pid']}\scan_report.json") as proc:
+                data = eval(proc.read())
+                print("Image Fullpath:",data['main_image_path'])
+                for i in data['scans']:
+                    if 'code_scan' in i:
+                        print("Suspicious Module (Triggered by code scan):",i['code_scan']['module_file'])
+                    if 'mapping_scan' in i:
+                        print("Suspicious Module (Triggered by mapping scan):",i['mapping_scan']['mapped_file'])
+                        print("\t\t\t\t\t      ",i['mapping_scan']['module_file'])
+            print("")
 
 
 
