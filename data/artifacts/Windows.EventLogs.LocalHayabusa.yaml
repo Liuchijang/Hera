@@ -96,7 +96,7 @@ sources:
    query: |
         LET OSPath <= SELECT dirname(path=Exe) + '\\hayabusa-2.13.0-win-x64.exe' as HYabsolutePath, dirname(path=Exe) as curDir
         FROM pslist(pid=getpid())
-        LET ResultFile <= str(str=OSPath[0].curDir) + '\\..\\output\\event-log-module-results.' + OutputFormat
+        LET ResultFile <= str(str=OSPath[0].curDir) + '\\..\\output\\event-log-module-output.' + OutputFormat
         LET HayabusaExe <= str(str=OSPath[0].HYabsolutePath)
         LET CurrentDir <= str(str=OSPath[0].curDir)
         -- LET LogsPath <= str(str=OSPath[0].curDir)+ '\\..\\extract' 
@@ -112,11 +112,14 @@ sources:
         -- If it does not match if(condition...), it returns Null, so remove Null with filter(....regex=".+")
         LET cmdline <= filter(list=(
           HayabusaExe, HayabusaCmd, "--live-analysis",
+          "--no-color",
           "--no-wizard", 
+          "--output", ResultFile,
           "--min-level", MinimalLevel,
           "--profile", OutputProfile,
           "--quiet", "--no-summary",
           "--threads", str(str=Threads),
+          if(condition=OutputFormat = "jsonl", then="-L"),
           if(condition=UTC, then="--UTC"),
           if(condition=NoisyRules, then="--enable-noisy-rules"),
           if(condition=EIDFilter, then="--eid-filter"),
