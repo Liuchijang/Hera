@@ -32,6 +32,7 @@ def process_module(verbose=False):
                             print("Suspicious Module (Triggered by mapping scan):",i['mapping_scan']['mapped_file'])
                             print("\t\t\t\t\t      ",i['mapping_scan']['module_file'])
                 print("")
+        print("Scan Processes completed.")
         return parsedOutput
 
 
