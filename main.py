@@ -14,6 +14,7 @@ from plugins.network import network_module
 from plugins.registry import registry_module
 from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
+from core.condition import *
 
 if __name__ == "__main__":          
         if check_port(8001):
