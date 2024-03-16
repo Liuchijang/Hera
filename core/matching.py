@@ -3,21 +3,22 @@ import json
 from collections import defaultdict
 
 
-malware_instance = Malware()
+malware_instances = []
 
-result = []
+event_log = []
 filepath = ".\\output\\event-log-module-output.jsonl"
 with open(filepath,"r") as file:
     for line in file:
-        result.append(json.loads(line))
+        event_log.append(json.loads(line))
 
-def process_tree():
+def create_process_tree():
     lst = []
-    for i in result:
+    process_tree = []
+    for i in event_log:
         if i['EventID'] == 4688:
             lst.append(i)
 
-    # print(result[0]['Timestamp'])
+    # print(event_log[0]['Timestamp'])
     pid_to_ppid = defaultdict(list)
     pid_to_cmd = defaultdict(list)
     ppid_to_name = defaultdict(list)
@@ -57,4 +58,14 @@ def process_tree():
     for root_pid in root_ppids:
         pid_dict = {}
         display_tree(root_pid, pid_dict)
-        return pid_dict
+        process_tree.append(pid_dict)
+    return process_tree
+    
+def creat_object(process_tree):
+    for i in process_tree:
+        malware_instances.append(Malware(i))
+
+if __name__ == "__main__":
+    creat_object(create_process_tree())
+    for i in malware_instances:
+        print(i.process)
