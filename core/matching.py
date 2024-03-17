@@ -27,22 +27,23 @@ def create_process_tree():
     for item in lst:
         pid = item['Details']['PID']
         ppid = item['ExtraFieldInfo']['ProcessId']
+        lid = item["Details"]['LID']
         cmd = item['Details']['Cmdline']
-        pid_to_ppid[ppid].append(pid)
-        pid_to_cmd[pid] = cmd
+        pid_to_ppid[(ppid, lid)].append((pid, lid))
+        pid_to_cmd[(pid, lid)] = (cmd, lid)
         if 'ExtraFieldInfo' in item and 'ParentProcessName' in item['ExtraFieldInfo']:
-            ppid_to_name[ppid] = item['ExtraFieldInfo']['ParentProcessName']
-        else: ppid_to_name[ppid] = ""
+            ppid_to_name[(ppid, lid)] = (item['ExtraFieldInfo']['ParentProcessName'], lid)
+        else: ppid_to_name[(ppid, lid)] = ("", lid)
 
     # Hiển thị cây quan hệ giữa PID và ProcessId
     def display_tree(ppid, pid_dict, prefix='', is_first=True, is_last=True):
         pid_dict[ppid] = pid_to_cmd[ppid]   
         if is_last and is_first:
-            print(prefix + '└── ' + f"{ppid} - {ppid_to_name[ppid]}")
+            print(prefix + '└── ' + f"{ppid[0]} - {ppid_to_name[ppid][0]}")
         elif is_last and not is_first:
-            print(prefix + '└── ' + f"{ppid} - {pid_to_cmd[ppid]}")    
+            print(prefix + '└── ' + f"{ppid[0]} - {pid_to_cmd[ppid][0]}")    
         else:
-            print(prefix + '├── ' + f"{ppid} - {pid_to_cmd[ppid]}")
+            print(prefix + '├── ' + f"{ppid[0]} - {pid_to_cmd[ppid][0]}")
         children = pid_to_ppid.get(ppid, [])
         count = len(children)
         for i, child_pid in enumerate(children, 1):
@@ -67,5 +68,5 @@ def creat_object(process_tree):
 
 if __name__ == "__main__":
     creat_object(create_process_tree())
-    for i in malware_instances:
-        print(i.process)
+    # for i in malware_instances:
+    #     print(i.process)
