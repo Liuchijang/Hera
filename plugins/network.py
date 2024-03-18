@@ -25,6 +25,8 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
         for i in parsed:
             if i['DestIP'] in malicious_ip:
                 if verbose: print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
+                ## whitelisting known legit exe
+                if i['MD5'] == "f374bc9acf51740eef76176f5127d69d": continue 
                 result.append(i)
     if save_to_file:
         filepath = os.path.join(outputFolder,"Network_module.json")
