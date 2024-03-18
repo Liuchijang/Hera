@@ -61,6 +61,25 @@ def print_output(bindings_dict, consumer_dict, filter_dict):
             print("\n            Filter: {}".format(event_filter_details))
             print("")
 
+
+def parse_WMI_output(consumer_dict):
+    consumer_list = []
+    for key in consumer_dict.keys():
+        # whitelisting known legit WMI consumer
+        if "SCM Event Log Consumer" in str(consumer_dict[key]) or "BVTConsumer" in str(consumer_dict[key]):
+            continue
+        consumer = "".join(consumer_dict[key]).split("\n\t\t")
+        consumerInstance = {}
+        for i in consumer:
+            if i.strip():
+                key, value = i.split(":", 1)
+                if key == "Arguments":
+                    value = "".join(eval(value))
+                    consumerInstance[key.strip()] = value.strip()
+                else: consumerInstance[key.strip()] = value.strip()
+        consumer_list.append(consumerInstance)
+    return consumer_list
+
 def wmi_module(inputFolder, outputFolder = None, verbose=False, savefile=False):
     print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nWMI scanning...")
     """Main function for everything!"""
@@ -197,7 +216,9 @@ def wmi_module(inputFolder, outputFolder = None, verbose=False, savefile=False):
     #print result to screen
     if verbose:
         print_output(bindings_dict,consumer_dict,filter_dict)
+    result = parse_WMI_output(consumer_dict)
     print("Scan WMI repository completed.")
+    return result
 
 
 
