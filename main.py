@@ -15,6 +15,7 @@ from plugins.registry import registry_module
 from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
 from core.condition import *
+from core.matching import matching
 
 if __name__ == "__main__":          
         if check_port(8001):
@@ -42,16 +43,17 @@ if __name__ == "__main__":
                 extractFolder = create_new_folder(outputFolder,"extract")
                 systeminfoFolder = create_new_folder(".", "system_info")
                 server = subprocess.Popen(command, shell=True)
-                collect_system_info()
-                collect_OBJECT_DATA(extractFolder,args.verbose)
-                wmi_module(extractFolder,outputFolder,args.verbose,args.save)
-                if args.collect:
-                        collect_evtx_file(extractFolder,args.verbose)
-                event_log_module(args.verbose)
-                process_module(args.verbose)
-                network_module(outputFolder,args.verbose,args.save)
-                registry_module(outputFolder,args.verbose,args.save)
-                fileScan_module(outputFolder,args.verbose,args.save)
+                # collect_system_info()
+                # collect_OBJECT_DATA(extractFolder,args.verbose)
+                # wmi_module(extractFolder,outputFolder,args.verbose,args.save)
+                # if args.collect:
+                #         collect_evtx_file(extractFolder,args.verbose)
+                # event_log_module(args.verbose)
+                # process_module(args.verbose)
+                # fileScan_module(outputFolder,args.verbose,args.save)
+                # registry_module(outputFolder,args.verbose,args.save)
+                network = network_module(outputFolder,args.verbose,args.save)
+                matching(matching([], [], [], network, []))
                 create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")
