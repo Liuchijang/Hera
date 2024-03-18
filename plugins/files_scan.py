@@ -14,6 +14,8 @@ def fileScan_module(outputFolder, verbose=False,save_to_file=False):
     result = []
     if check_connect():
         for i in parsed:
+            #whitelisting known legit executable
+            if i['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": continue
             check = check_virustotal("check_hash", i['MD5'])
             if check == 1:
                 if verbose: print("Detected malicious file, FilePath: " + i['OSPath'])
@@ -22,6 +24,7 @@ def fileScan_module(outputFolder, verbose=False,save_to_file=False):
         with open("./data/malicious_MD5.txt", "r") as f:
             malicious_MD5 = set(line.strip() for line in f)
         for i in parsed:
+            if i['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": continue
             if i['MD5'] in malicious_MD5:
                 if verbose: print("Detected malicious file, FilePath: " + i['OSPath'])
                 result.append(i)
