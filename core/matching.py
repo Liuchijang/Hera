@@ -34,6 +34,22 @@ for item in lst:
         ppid_to_name[(ppid, lid)] = (item['ExtraFieldInfo']['ParentProcessName'], lid)
     else: ppid_to_name[(ppid, lid)] = ("", lid)
 
+def event_id_8(event_log):
+    result = []
+    for i in event_log:
+        if i['EventID'] == 8 and ('hollows_hunter64.exe' not in i['Details']['SrcProc']):
+            tmp = (i['Details']['SrcPID'], i['Details'][''], i['Details']['TgtPID'], i['Details']['TgtProc'])
+            result.append(tmp)
+    return result
+
+def event_id_13(event_log):
+    result = []
+    for i in event_log:
+        if i['EventID'] == 13:
+            tmp = (i['Details']['PID'], i['Details']['Proc'], i['Details']['TgtObj'], i['Details'][''])
+            result.append(tmp)
+    return result
+
 
 def create_process_tree():
     # Hiển thị cây quan hệ giữa PID và ProcessId
@@ -79,4 +95,7 @@ def matching(process, registry, files, network, wmi):
 if __name__ == "__main__":
     # for i in malware_instances:
     #     print(i.process)
+    tmp = event_id_13(event_log)
+    for i in tmp:
+        print(i)
     print("Done")
