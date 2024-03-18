@@ -13,6 +13,7 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
     parsed = eval(correctSyntax)
     malicious_ip = []
     result = []
+    currentPid = eval(Run_velociraptor_query("select Pid from pslist(pid=getpid())"))[0]['Pid']
     if check_connect():
         for i in parsed:
             check = check_virustotal("check_ip", i['DestIP'])
@@ -25,8 +26,8 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
         for i in parsed:
             if i['DestIP'] in malicious_ip:
                 if verbose: print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
-                ## whitelisting known legit exe
-                if i['MD5'] == "f374bc9acf51740eef76176f5127d69d": continue 
+                ## whitelisting Current ProcessID
+                if i['Pid'] == currentPid: continue 
                 result.append(i)
     if save_to_file:
         filepath = os.path.join(outputFolder,"Network_module.json")
