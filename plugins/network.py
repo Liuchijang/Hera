@@ -25,9 +25,9 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
             malicious_ip = set(line.strip() for line in f)
         for i in parsed:
             if i['DestIP'] in malicious_ip:
-                if verbose: print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
                 ## whitelisting Current ProcessID
                 if i['Pid'] == currentPid: continue 
+                if verbose: print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
                 result.append(i)
     if save_to_file:
         filepath = os.path.join(outputFolder,"Network_module.json")
