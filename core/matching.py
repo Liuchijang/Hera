@@ -28,11 +28,11 @@ for item in lst:
     lid = item["Details"]['LID']
     cmd = item['Details']['Cmdline']
     pid_to_ppid[(ppid, lid)].append((pid, lid))
-    pid_to_cmd[(pid, lid)] = (cmd, lid)
-    pid_to_name[(pid, lid)] = (item['Details']['Proc'], lid)
+    pid_to_cmd[(pid, lid)] = cmd
+    pid_to_name[(pid, lid)] = item['Details']['Proc']
     if 'ExtraFieldInfo' in item and 'ParentProcessName' in item['ExtraFieldInfo']:
-        ppid_to_name[(ppid, lid)] = (item['ExtraFieldInfo']['ParentProcessName'], lid)
-    else: ppid_to_name[(ppid, lid)] = ("", lid)
+        ppid_to_name[(ppid, lid)] = item['ExtraFieldInfo']['ParentProcessName']
+    else: ppid_to_name[(ppid, lid)] = ""
 matched_wmi_instances = []
 matched_log_records = []
 matched_connections = []
@@ -42,7 +42,7 @@ def event_id_8(event_log):
     result = []
     for i in event_log:
         if i['EventID'] == 8 and ('hollows_hunter64.exe' not in i['Details']['SrcProc']):
-            tmp = (i['Details']['SrcPID'], i['Details'][''], i['Details']['TgtPID'], i['Details']['TgtProc'])
+            tmp = (i['Details']['SrcPID'], i['Details']['SrcProc'], i['Details']['TgtPID'], i['Details']['TgtProc'])
             result.append(tmp)
     return result
 
@@ -57,21 +57,25 @@ def event_id_13(event_log):
 
 def create_process_tree():
     # Hiển thị cây quan hệ giữa PID và ProcessId
-    def display_tree(ppid, pid_dict, prefix='', is_first=True, is_last=True):
-        pid_dict[ppid] = pid_to_cmd[ppid]   
+    def display_tree(ppid, pid_dict, prefix='', is_first=True, is_last=True, level=0):
         if is_last and is_first:
+            pid_dict[ppid[0], ppid_to_name[ppid]] = ("", level)
+            level = level + 1
             print()
-            print(prefix + '└── ' + f"{ppid[0]} - {ppid_to_name[ppid][0]}")
+            print(prefix + '└── ' + f"{ppid[0]} - {ppid_to_name[ppid]}")
         elif is_last and not is_first:
-            print(prefix + '└── ' + f"{ppid[0]} - {pid_to_cmd[ppid][0]}")    
+            pid_dict[ppid[0], pid_to_name[ppid]] = (pid_to_cmd[ppid], level)
+            level = level + 1
+            print(prefix + '└── ' + f"{ppid[0]} - {pid_to_cmd[ppid]}")    
         else:
-            print(prefix + '├── ' + f"{ppid[0]} - {pid_to_cmd[ppid][0]}")
+            pid_dict[ppid[0], pid_to_name[ppid]] = (pid_to_cmd[ppid], level)
+            print(prefix + '├── ' + f"{ppid[0]} - {pid_to_cmd[ppid]}")
         children = pid_to_ppid.get(ppid, [])
         count = len(children)
         for i, child_pid in enumerate(children, 1):
             is_first = False
             is_last = i == count
-            display_tree(child_pid, pid_dict , prefix + ('    ' if is_last else '│   '), False, is_last)
+            display_tree(child_pid, pid_dict , prefix + ('    ' if is_last else '│   '), False, is_last, level)
             
     # Tạo một tập hợp duy nhất của tất cả các phần tử từ tập hợp các giá trị
     all_ppids = set(pid for sublist in pid_to_ppid.values() for pid in sublist)
@@ -79,7 +83,7 @@ def create_process_tree():
     # Tìm PPID gốc (PPID không phải là PID của bất kỳ tiến trình nào)
     root_ppids = set(pid_to_ppid.keys()) - all_ppids
     for root_pid in root_ppids:
-        pid_dict = {}
+        pid_dict = defaultdict(list)
         display_tree(root_pid, pid_dict)
         process_tree.append(pid_dict)
     return process_tree
@@ -149,7 +153,10 @@ def matching(process, registry, files, network, wmi):
 if __name__ == "__main__":
     # for i in malware_instances:
     #     print(i.process)
-    tmp = event_id_13(event_log)
-    for i in tmp:
+    # tmp = event_id_13(event_log)
+    # for i in tmp:
+    #     print(i)
+    for i in create_process_tree():
         print(i)
+
     print("Done")
