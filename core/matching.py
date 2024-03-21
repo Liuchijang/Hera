@@ -33,6 +33,10 @@ for item in lst:
     if 'ExtraFieldInfo' in item and 'ParentProcessName' in item['ExtraFieldInfo']:
         ppid_to_name[(ppid, lid)] = (item['ExtraFieldInfo']['ParentProcessName'], lid)
     else: ppid_to_name[(ppid, lid)] = ("", lid)
+matched_wmi_instances = []
+matched_log_records = []
+matched_connections = []
+matched_processes = []
 
 def event_id_8(event_log):
     result = []
@@ -79,7 +83,57 @@ def create_process_tree():
         display_tree(root_pid, pid_dict)
         process_tree.append(pid_dict)
     return process_tree
-    
+
+def match_cmdline(wmi, network, event_log):
+    for i in wmi:
+        for j in event_log:
+            # Matching based on event log id 5861/1-4688/20 respectively
+            if ("Details" in j['Details'] and i['Arguments'].replace("\\","") in j['Details']['Details'].replace("\\",""))  \
+                or ("Cmdline" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Cmdline'].replace("\\","")) \
+                or ("Tgt" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Tgt'].replace("\\","").replace("\"","")):
+                if i not in matched_wmi_instances: matched_wmi_instances.append(i)
+                if j not in matched_log_records: matched_log_records.append(j)
+        for k in network:
+            if k['CommandLine'].replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
+                if i not in matched_wmi_instances: matched_wmi_instances.append(i)
+                if k not in matched_connections: matched_connections.append(k)
+    for i in event_log:
+        for j in network:
+            if "Cmdline" in i['Details'] and j['CommandLine'].replace("\"","").replace("\\","") in 	i['Details']['Cmdline'].replace("\"","").replace("\\",""):
+                if i not in matched_log_records: matched_log_records.append(i)
+                if k not in matched_connections: matched_connections.append(j)
+
+def match_loaded_dll(event_log, network, process):
+    for sus in process['suspicious']:
+        with open(rf".\output\HollowsHunter\process_{sus['pid']}\scan_report.json") as proc:
+            data = eval(proc.read())
+            for i in data['scans']:
+                for j in i.keys():
+                    if 'module_file' in i[j]\
+                        and i[j]['module_file'].replace("\\","").lower() != "C:\Windows\System32\\ntdll.dll".replace("\\","").lower():
+                        for k in event_log:
+                            if ('Rule' in k['Details'] \
+                                and k['Details']['Rule'] == 'DLL'  \
+                                and i[j]['module_file'].replace("\\","").lower() == k['Details']['Path'].replace("\\","").lower()):
+                                matched_log_records.append(k)
+                                matched_processes.append(sus)
+                        for n in network:
+                            for m in n['ModulePath']:
+                                if i[j]['module_file'].replace("\\","").lower() == m.replace("\\","").lower():
+                                    matched_connections.append(n)
+                                    matched_processes.append(sus)
+            proc.close()
+    for i in event_log:
+        for j in network:
+            for k in j['ModulePath']:
+                ## Matching based on event log id 11
+                if ('Rule' in i['Details'] \
+                    and i['Details']['Rule'] == 'DLL'  \
+                    and i['Details']['Proc'].split("\\")[-1].lower() == j['Name'].lower()\
+                    and k.replace("\\","").lower() == i['Details']['Path'].replace("\\","").lower()):
+                    matched_log_records.append(i)
+                    matched_connections.append(j)
+
 def creat_object(process_tree):
     for i in process_tree:
         malware_instances.append(Malware(i))
