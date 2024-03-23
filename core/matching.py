@@ -138,9 +138,40 @@ def match_loaded_dll(event_log, network, process):
                     matched_log_records.append(i)
                     matched_connections.append(j)
 
-def creat_object(process_tree):
+def creat_object(process_tree, process, network=None):
     for i in process_tree:
         malware_instances.append(Malware(i))
+    for sus in process['suspicious']:
+        with open(rf".\output\HollowsHunter\process_{sus['pid']}\scan_report.json") as f:
+            proc = eval(f.read())
+            isContained = False
+            for p in process_tree:
+                if (proc['pid'],proc['main_image_path'])  in p.keys():
+                    isContained = True
+            if not isContained: 
+                processBehavior = defaultdict(list)
+                processBehavior[proc['pid'], proc['main_image_path']] = ("", 0)
+                malware = Malware(processBehavior)
+                # for i in proc['scans']:
+                #     for j in i.keys():
+                #         if 'module_file' in i[j]:
+                #             # Whitelisting known legit dll
+                #             if i[j]['module_file'].replace("\\","").lower() == "C:\Windows\System32\\ntdll.dll".replace("\\","").lower(): continue
+                #             if "dll" in i[j]['module_file']: malware.add_dll((i[j]['module_file'],1))
+                #             else: malware.add_file((i[j]['module_file'],1))
+                malware_instances.append(malware)
+        f.close()
+    for conn in network:
+        isContained = False
+        for m in malware_instances:
+            if (conn['Pid'],conn['Path'])  in m.process:
+                isContained = True
+        if not isContained: 
+            processBehavior = defaultdict(list)
+            processBehavior[conn['Pid'],conn['Path']] = (conn['CommandLine'], 0)
+            malware = Malware(processBehavior)
+            malware_instances.append(malware)
+
 
 def matching(process, registry, files, network, wmi):
     print(process)
@@ -148,7 +179,7 @@ def matching(process, registry, files, network, wmi):
     print(files)
     print(network)
     print(wmi)
-    creat_object(create_process_tree())
+    creat_object(create_process_tree(),process)
 
 if __name__ == "__main__":
     # for i in malware_instances:
@@ -156,7 +187,31 @@ if __name__ == "__main__":
     # tmp = event_id_13(event_log)
     # for i in tmp:
     #     print(i)
-    for i in create_process_tree():
-        print(i)
+    process_tree = create_process_tree()
+    print("-------------------------------------------------")
+    network = []
+    event_log = []
+    filepath = ".\\output\\Network_module.json"
+    with open(filepath,"r") as f:
+        network = eval(f.read())
+    f.close()
+    process = []
+    filepath = ".\\output\\HollowsHunter\\summary.json"
+    with open(filepath,"r") as f:
+        process = eval(f.read())
+    f.close()
+    creat_object(process_tree,process,network)
+    count = 1
+    for i in malware_instances:
+        print(f"--------------------Object {count}--------------------")
+        i.display()
+        count += 1 
+        print("")
+        
+    
+    # for i in malware_instances:
+    #     print(i.process,"----------------------------------------------\n")
 
-    print("Done")
+    
+
+    # print("Done")
