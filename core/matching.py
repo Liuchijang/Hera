@@ -219,14 +219,13 @@ def creat_object(process_tree, event_log, process, network=None):
                 malware = Malware(processBehavior)
                 malware_instances.append(malware)
 
-def matching(process, registry, files, network, wmi):
-    print(process)
-    print(registry)
-    print(files)
-    print(network)
-    print(wmi)
-    creat_object(create_process_tree(),process)
-
+def matching(process, registry, network, wmi,files=None):
+    creat_object(process_tree,event_log,process,network)
+    match_pid_name_dll(event_log,process,network)
+    match_pid_name_network(network)
+    for i in malware_instances:
+        i.display()
+        print("")
 if __name__ == "__main__":
         # Initializing input for testing
     process_tree = create_process_tree()
@@ -256,9 +255,4 @@ if __name__ == "__main__":
                         .replace("HKEY_CURRENT_CONFIG","HKCC"))
     f.close()
         # Displaying suspicious objects
-    creat_object(process_tree,event_log,process,network)
-    match_pid_name_dll(event_log,process,network)
-    match_pid_name_network(network)
-    for i in malware_instances:
-        i.display()
-        print("")
+    
