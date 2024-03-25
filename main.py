@@ -54,7 +54,6 @@ if __name__ == "__main__":
                 networkOutput = network_module(outputFolder,args.verbose,args.save)
                 regOutput = registry_module(outputFolder,args.verbose,args.save)
                 if args.fast:
-                        fileOutput = fileScan_module(outputFolder,args.verbose,args.save)
                         matching(processOutput, regOutput, networkOutput, wmiOutput)
                 else:
                         fileOutput = fileScan_module(outputFolder,args.verbose,args.save)
