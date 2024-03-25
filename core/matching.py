@@ -33,12 +33,6 @@ for item in lst:
     if 'ExtraFieldInfo' in item and 'ParentProcessName' in item['ExtraFieldInfo']:
         ppid_to_name[(ppid, lid)] = item['ExtraFieldInfo']['ParentProcessName']
     else: ppid_to_name[(ppid, lid)] = ""
-matched_wmi_instances = []
-matched_log_records = []
-matched_connections = []
-matched_processes = []
-matched_registry_key_path = []
-matched_registry_key_value = []
 
 def event_id_8(event_log):
     result = []
