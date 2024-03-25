@@ -112,6 +112,7 @@ sources:
         -- If it does not match if(condition...), it returns Null, so remove Null with filter(....regex=".+")
         LET cmdline <= filter(list=(
           HayabusaExe, HayabusaCmd, "--live-analysis",
+          "--clobber",
           "--no-color",
           "--no-wizard", 
           "--output", ResultFile,
