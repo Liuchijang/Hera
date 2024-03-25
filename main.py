@@ -29,6 +29,7 @@ if __name__ == "__main__":
         parser.add_argument("-cl", "--collect", action="store_true", help="Collect event log files")
         parser.add_argument("-sf", "--save", action="store_true", help="Save output to file")
         parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose")
+        parser.add_argument("-f", "--fast", action="store_true", help="Do not scan files for quick analysis")
         args = parser.parse_args()   
         velociraptor_executable = ".\\tools\\velociraptor-v0.7.1-1-windows-amd64.exe"
         artifacts_folder = ".\\data\\artifacts"
@@ -43,17 +44,21 @@ if __name__ == "__main__":
                 extractFolder = create_new_folder(outputFolder,"extract")
                 systeminfoFolder = create_new_folder(".", "system_info")
                 server = subprocess.Popen(command, shell=True)
-                # collect_system_info()
-                # collect_OBJECT_DATA(extractFolder,args.verbose)
-                # wmi_module(extractFolder,outputFolder,args.verbose,args.save)
-                # if args.collect:
-                #         collect_evtx_file(extractFolder,args.verbose)
-                # event_log_module(args.verbose)
-                # process_module(args.verbose)
-                # fileScan_module(outputFolder,args.verbose,args.save)
-                # registry_module(outputFolder,args.verbose,args.save)
-                network = network_module(outputFolder,args.verbose,args.save)
-                matching(matching([], [], [], network, []))
+                collect_system_info()
+                collect_OBJECT_DATA(extractFolder,args.verbose)
+                wmiOutput = wmi_module(extractFolder,outputFolder,args.verbose,args.save)
+                if args.collect:
+                        collect_evtx_file(extractFolder,args.verbose)
+                eventLogOutput = event_log_module(args.verbose)
+                processOutput = process_module(args.verbose)
+                networkOutput = network_module(outputFolder,args.verbose,args.save)
+                regOutput = registry_module(outputFolder,args.verbose,args.save)
+                if args.fast:
+                        fileOutput = fileScan_module(outputFolder,args.verbose,args.save)
+                        matching(processOutput, regOutput, networkOutput, wmiOutput)
+                else:
+                        fileOutput = fileScan_module(outputFolder,args.verbose,args.save)
+                        matching(processOutput, regOutput, networkOutput, wmiOutput, fileOutput)
                 create_report()
         except Exception as e:
                 print(f"An error occurred: {e}")
