@@ -37,6 +37,8 @@ matched_wmi_instances = []
 matched_log_records = []
 matched_connections = []
 matched_processes = []
+matched_registry_key_path = []
+matched_registry_key_value = []
 
 def event_id_8(event_log):
     result = []
@@ -54,6 +56,55 @@ def event_id_13(event_log):
             result.append(tmp)
     return result
 
+def event_id_11_to_dll(event_log, proc):
+    # proc[0] is PID, proc[1] is Process Name
+    result = []
+    for event in event_log:
+        if event['EventID'] == 11 \
+            and event['Details']['Rule'] == 'DLL'  \
+            and event['Details']['PID'] == proc[0] \
+            and event['Details']['Proc'] == proc[1]:
+            result.append(event['Details']['Path'])
+    return result
+
+def hollowsHunter_to_dll(process, proc):
+    result = []
+    for sus in process['suspicious']:
+        with open(rf".\output\HollowsHunter\process_{sus['pid']}\scan_report.json") as f:
+            data = eval(f.read())
+            if data['pid'] != proc[0] \
+                or data['main_image_path'] != proc[1]:
+                f.close()
+                continue
+            for i in data['scans']:
+                for j in i.keys():
+                    # whitelisting known legit dll
+                    if 'module_file' in i[j]\
+                        and i[j]['module_file'] != "C:\Windows\System32\\ntdll.dll":
+                        if "dll" in i[j]['module_file']:
+                            result.append(i[j]['module_file'])
+        f.close()
+    return result
+
+def network_to_dll(network, proc):
+    result = []
+    for conn in network:
+        if conn['Path'] == proc[1] \
+            and conn['Pid'] == proc[0]:
+            for dll in conn['ModulePath']:
+                #just loaded dlls by process
+                if "dll" in dll: 
+                    result.append(dll)
+    return result
+
+def networkConnection(network, proc):
+    result = []
+    for conn in network:
+        if conn['Path'] == proc[1] \
+            and conn['Pid'] == proc[0]:
+            connection = {'SrcIP': conn['SrcIP'],'SrcPort': conn['SrcPort'],'DestIP': conn['DestIP'],'DestPort': conn['DestPort']}
+            result.append(connection)
+    return result
 
 def create_process_tree():
     # Hiển thị cây quan hệ giữa PID và ProcessId
@@ -61,15 +112,15 @@ def create_process_tree():
         if is_last and is_first:
             pid_dict[ppid[0], ppid_to_name[ppid]] = ("", level)
             level = level + 1
-            print()
-            print(prefix + '└── ' + f"{ppid[0]} - {ppid_to_name[ppid]}")
+            # print()
+            # print(prefix + '└── ' + f"{ppid[0]} - {ppid_to_name[ppid]}")
         elif is_last and not is_first:
             pid_dict[ppid[0], pid_to_name[ppid]] = (pid_to_cmd[ppid], level)
             level = level + 1
-            print(prefix + '└── ' + f"{ppid[0]} - {pid_to_cmd[ppid]}")    
+            # print(prefix + '└── ' + f"{ppid[0]} - {pid_to_cmd[ppid]}")    
         else:
             pid_dict[ppid[0], pid_to_name[ppid]] = (pid_to_cmd[ppid], level)
-            print(prefix + '├── ' + f"{ppid[0]} - {pid_to_cmd[ppid]}")
+            # print(prefix + '├── ' + f"{ppid[0]} - {pid_to_cmd[ppid]}")
         children = pid_to_ppid.get(ppid, [])
         count = len(children)
         for i, child_pid in enumerate(children, 1):
@@ -89,6 +140,7 @@ def create_process_tree():
     return process_tree
 
 def match_cmdline(wmi, network, event_log):
+    # Matching command line between 3 modules WMI, Network and Event log
     for i in wmi:
         for j in event_log:
             # Matching based on event log id 5861/1-4688/20 respectively
@@ -107,38 +159,28 @@ def match_cmdline(wmi, network, event_log):
                 if i not in matched_log_records: matched_log_records.append(i)
                 if k not in matched_connections: matched_connections.append(j)
 
-def match_loaded_dll(event_log, network, process):
-    for sus in process['suspicious']:
-        with open(rf".\output\HollowsHunter\process_{sus['pid']}\scan_report.json") as proc:
-            data = eval(proc.read())
-            for i in data['scans']:
-                for j in i.keys():
-                    if 'module_file' in i[j]\
-                        and i[j]['module_file'].replace("\\","").lower() != "C:\Windows\System32\\ntdll.dll".replace("\\","").lower():
-                        for k in event_log:
-                            if ('Rule' in k['Details'] \
-                                and k['Details']['Rule'] == 'DLL'  \
-                                and i[j]['module_file'].replace("\\","").lower() == k['Details']['Path'].replace("\\","").lower()):
-                                matched_log_records.append(k)
-                                matched_processes.append(sus)
-                        for n in network:
-                            for m in n['ModulePath']:
-                                if i[j]['module_file'].replace("\\","").lower() == m.replace("\\","").lower():
-                                    matched_connections.append(n)
-                                    matched_processes.append(sus)
-            proc.close()
-    for i in event_log:
-        for j in network:
-            for k in j['ModulePath']:
-                ## Matching based on event log id 11
-                if ('Rule' in i['Details'] \
-                    and i['Details']['Rule'] == 'DLL'  \
-                    and i['Details']['Proc'].split("\\")[-1].lower() == j['Name'].lower()\
-                    and k.replace("\\","").lower() == i['Details']['Path'].replace("\\","").lower()):
-                    matched_log_records.append(i)
-                    matched_connections.append(j)
+def match_pid_name_dll(event_log, process, network):
+    # Value of Detected key in DLL attribute: 0 means the process had loaded dll, 1 means that dll was loaded and detected as suspicious
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            event_log_matches = event_id_11_to_dll(event_log,proc)
+            for i in event_log_matches:
+                malware_instances[index].add_dll(proc,(i,1))
+            process_matches = hollowsHunter_to_dll(process,proc)
+            for i in process_matches:
+                malware_instances[index].add_dll(proc,(i,1))
+            network_matches = network_to_dll(network,proc)
+            for i in network_matches:
+                malware_instances[index].add_dll(proc,(i,0))
 
-def creat_object(process_tree, process, network=None):
+def match_pid_name_network(network):
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            connections = networkConnection(network, proc)
+            for conn in connections:
+                malware_instances[index].add_network_activity(proc,conn)
+
+def creat_object(process_tree, event_log, process, network=None):
     for i in process_tree:
         malware_instances.append(Malware(i))
     for sus in process['suspicious']:
@@ -171,7 +213,17 @@ def creat_object(process_tree, process, network=None):
             processBehavior[conn['Pid'],conn['Path']] = (conn['CommandLine'], 0)
             malware = Malware(processBehavior)
             malware_instances.append(malware)
-
+    for event in event_log:
+        if event['EventID'] == 13:
+            isContained = False
+            for m in malware_instances:
+                if (event['Details']['PID'],event['Details']['Proc'])  in m.process:
+                    isContained = True
+            if not isContained:
+                processBehavior = defaultdict(list)
+                processBehavior[event['Details']['PID'],event['Details']['Proc']] = ("", 0)
+                malware = Malware(processBehavior)
+                malware_instances.append(malware)
 
 def matching(process, registry, files, network, wmi):
     print(process)
@@ -182,36 +234,37 @@ def matching(process, registry, files, network, wmi):
     creat_object(create_process_tree(),process)
 
 if __name__ == "__main__":
-    # for i in malware_instances:
-    #     print(i.process)
-    # tmp = event_id_13(event_log)
-    # for i in tmp:
-    #     print(i)
+        # Initializing input for testing
     process_tree = create_process_tree()
-    print("-------------------------------------------------")
     network = []
-    event_log = []
+    # event_log = []
+    registry = []
+    process = []
+
     filepath = ".\\output\\Network_module.json"
     with open(filepath,"r") as f:
         network = eval(f.read())
     f.close()
-    process = []
+
     filepath = ".\\output\\HollowsHunter\\summary.json"
     with open(filepath,"r") as f:
         process = eval(f.read())
     f.close()
-    creat_object(process_tree,process,network)
-    count = 1
+
+    filepath = ".\\output\\Registry_module.json"
+    with open(filepath,"r") as f:
+        # Normalizing Registry key path
+        registry = eval(f.read().replace("null","0")\
+                        .replace("HKEY_LOCAL_MACHINE","HKLM")\
+                        .replace("HKEY_CLASSES_ROOT","HKCR")\
+                        .replace("HKEY_CURRENT_USER","HKCU")\
+                        .replace("HKEY_USERS","HKU")\
+                        .replace("HKEY_CURRENT_CONFIG","HKCC"))
+    f.close()
+        # Displaying suspicious objects
+    creat_object(process_tree,event_log,process,network)
+    match_pid_name_dll(event_log,process,network)
+    match_pid_name_network(network)
     for i in malware_instances:
-        print(f"--------------------Object {count}--------------------")
         i.display()
-        count += 1 
         print("")
-        
-    
-    # for i in malware_instances:
-    #     print(i.process,"----------------------------------------------\n")
-
-    
-
-    # print("Done")
