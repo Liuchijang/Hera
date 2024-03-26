@@ -8,7 +8,7 @@ def event_log_module(verbose=False):
     Run_velociraptor_query(query)
     result = []
     filepath = ".\\output\\event-log-module-output.jsonl"
-    with open(filepath,"r") as file:
+    with open(filepath,"r",encoding='latin-1') as file:
         for line in file:
             result.append(json.loads(line))
     if verbose:
