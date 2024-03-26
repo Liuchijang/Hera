@@ -17,6 +17,7 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
     if check_connect():
         for i in parsed:
             check = check_virustotal("check_ip", i['DestIP'])
+            if i['Pid'] == currentPid: continue 
             if check == 1:
                 if verbose: print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
                 result.append(i)
