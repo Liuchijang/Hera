@@ -5,35 +5,6 @@ from collections import defaultdict
 
 malware_instances = []
 
-event_log = []
-filepath = ".\\output\\event-log-module-output.jsonl"
-with open(filepath,"r") as file:
-    for line in file:
-        event_log.append(json.loads(line))
-
-lst = []
-process_tree = []
-for i in event_log:
-    if i['EventID'] == 4688 and 'ExtraFieldInfo' in i and 'ParentProcessName' in i['ExtraFieldInfo']:
-        lst.append(i)
-# print(event_log[0]['Timestamp'])
-pid_to_ppid = defaultdict(list)
-pid_to_cmd = defaultdict(list)
-ppid_to_name = defaultdict(list)
-pid_to_name = defaultdict(list)
-# Đổ dữ liệu từ danh sách vào defaultdict
-for item in lst:
-    pid = item['Details']['PID']
-    ppid = item['ExtraFieldInfo']['ProcessId']
-    lid = item["Details"]['LID']
-    cmd = item['Details']['Cmdline']
-    pid_to_ppid[(ppid, lid)].append((pid, lid))
-    pid_to_cmd[(pid, lid)] = cmd
-    pid_to_name[(pid, lid)] = item['Details']['Proc']
-    if 'ExtraFieldInfo' in item and 'ParentProcessName' in item['ExtraFieldInfo']:
-        ppid_to_name[(ppid, lid)] = item['ExtraFieldInfo']['ParentProcessName']
-    else: ppid_to_name[(ppid, lid)] = ""
-
 def event_id_8(event_log):
     result = []
     for i in event_log:
@@ -100,8 +71,31 @@ def networkConnection(network, proc):
             result.append(connection)
     return result
 
-def create_process_tree():
+def create_process_tree(event_log):
     # Hiển thị cây quan hệ giữa PID và ProcessId
+    lst = []
+    process_tree = []
+    for i in event_log:
+        if i['EventID'] == 4688 and 'ExtraFieldInfo' in i and 'ParentProcessName' in i['ExtraFieldInfo']:
+            lst.append(i)
+    # print(event_log[0]['Timestamp'])
+    pid_to_ppid = defaultdict(list)
+    pid_to_cmd = defaultdict(list)
+    ppid_to_name = defaultdict(list)
+    pid_to_name = defaultdict(list)
+    # Đổ dữ liệu từ danh sách vào defaultdict
+    for item in lst:
+        pid = item['Details']['PID']
+        ppid = item['ExtraFieldInfo']['ProcessId']
+        lid = item["Details"]['LID']
+        cmd = item['Details']['Cmdline']
+        pid_to_ppid[(ppid, lid)].append((pid, lid))
+        pid_to_cmd[(pid, lid)] = cmd
+        pid_to_name[(pid, lid)] = item['Details']['Proc']
+        if 'ExtraFieldInfo' in item and 'ParentProcessName' in item['ExtraFieldInfo']:
+            ppid_to_name[(ppid, lid)] = item['ExtraFieldInfo']['ParentProcessName']
+        else: ppid_to_name[(ppid, lid)] = ""
+
     def display_tree(ppid, pid_dict, prefix='', is_first=True, is_last=True, level=0):
         if is_last and is_first:
             pid_dict[ppid[0], ppid_to_name[ppid]] = ("", level)
@@ -219,8 +213,8 @@ def creat_object(process_tree, event_log, process, network=None):
                 malware = Malware(processBehavior)
                 malware_instances.append(malware)
 
-def matching(process, registry, network, wmi,files=None):
-    creat_object(process_tree,event_log,process,network)
+def matching(event_log, process, network, registry=None, wmi=None,files=None):
+    creat_object(create_process_tree(event_log),event_log,process,network)
     match_pid_name_dll(event_log,process,network)
     match_pid_name_network(network)
     for i in malware_instances:
@@ -228,9 +222,8 @@ def matching(process, registry, network, wmi,files=None):
         print("")
 if __name__ == "__main__":
         # Initializing input for testing
-    process_tree = create_process_tree()
     network = []
-    # event_log = []
+    event_log = []
     registry = []
     process = []
 
@@ -254,5 +247,11 @@ if __name__ == "__main__":
                         .replace("HKEY_USERS","HKU")\
                         .replace("HKEY_CURRENT_CONFIG","HKCC"))
     f.close()
-        # Displaying suspicious objects
     
+    filepath = ".\\output\\event-log-module-output.jsonl"
+    with open(filepath,"r") as file:
+        for line in file:
+            event_log.append(json.loads(line))
+    process_tree = create_process_tree(event_log)
+        # Displaying suspicious objects
+    matching(event_log, process, network)
