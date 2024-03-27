@@ -12,7 +12,7 @@ def event_id_8(event_log, proc):
             and ('hollows_hunter64.exe' not in event['Details']['SrcProc']) \
             and event['Details']['SrcPID'] == proc[0] \
             and event['Details']['SrcProc'] == proc[1]:
-            tmp = event['Details']['StartModule'] + f"({event['Details']['TgtProc']})"
+            tmp = event['Details']['TgtProc']
             result.append(tmp)
     return result
 
@@ -159,9 +159,6 @@ def match_pid_name_dll(event_log, process, network):
             event_log_matches = event_id_11_to_dll(event_log,proc)
             for i in event_log_matches:
                 malware_instances[index].add_dll(proc,(i,1))
-            injection_matches = event_id_8(event_log,proc)
-            for i in injection_matches:
-                malware_instances[index].add_dll(proc,(i,1))
             process_matches = hollowsHunter_to_dll(process,proc)
             for i in process_matches:
                 malware_instances[index].add_dll(proc,(i,1))
@@ -182,6 +179,13 @@ def match_pid_name_registry(event_log):
             result = event_id_13(event_log, proc)
             for i in result:    
                 malware_instances[index].add_registry_entry(proc, i)
+
+def match_pid_name_files(event_log):
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            result = event_id_8(event_log, proc)
+            for i in result:    
+                malware_instances[index].add_file(proc, i)
 
 def creat_object(process_tree, event_log, process, network=None):
     for i in process_tree:
