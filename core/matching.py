@@ -13,11 +13,13 @@ def event_id_8(event_log):
             result.append(tmp)
     return result
 
-def event_id_13(event_log):
+def event_id_13(event_log, proc):
     result = []
-    for i in event_log:
-        if i['EventID'] == 13:
-            tmp = (i['Details']['PID'], i['Details']['Proc'], i['Details']['TgtObj'], i['Details'][''])
+    for event in event_log:
+        if event['EventID'] == 13 \
+            and event['Details']['PID'] == proc[0] \
+            and event['Details']['Proc'] == proc[1]:
+            tmp = (event['Details']['TgtObj'], event['Details'][''])
             result.append(tmp)
     return result
 
@@ -168,6 +170,13 @@ def match_pid_name_network(network):
             for conn in connections:
                 malware_instances[index].add_network_activity(proc,conn)
 
+def match_pid_name_registry(event_log):
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            result = event_id_13(event_log, proc)
+            for i in result:    
+                malware_instances[index].add_registry_entry(proc, i)
+
 def creat_object(process_tree, event_log, process, network=None):
     for i in process_tree:
         malware_instances.append(Malware(i))
@@ -217,6 +226,7 @@ def matching(event_log, process, network, registry=None, wmi=None,files=None):
     creat_object(create_process_tree(event_log),event_log,process,network)
     match_pid_name_dll(event_log,process,network)
     match_pid_name_network(network)
+    match_pid_name_registry(event_log)
     for i in malware_instances:
         i.display()
         print("")
