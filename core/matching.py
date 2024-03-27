@@ -26,6 +26,7 @@ def event_id_11_to_dll(event_log, proc):
     result = []
     for event in event_log:
         if event['EventID'] == 11 \
+            and 'Rule' in event['Details']\
             and event['Details']['Rule'] == 'DLL'  \
             and event['Details']['PID'] == proc[0] \
             and event['Details']['Proc'] == proc[1]:
@@ -69,6 +70,13 @@ def networkConnection(network, proc):
             and conn['Pid'] == proc[0]:
             connection = {'SrcIP': conn['SrcIP'],'SrcPort': conn['SrcPort'],'DestIP': conn['DestIP'],'DestPort': conn['DestPort']}
             result.append(connection)
+    return result
+
+def wmi_to_cmdline(wmi, commandline):
+    result = []
+    for i in wmi:
+        if 'Arguments' in i and commandline.replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
+            result.append((i['Consumer Name'],i['Arguments']))
     return result
 
 def create_process_tree(event_log):
@@ -127,25 +135,28 @@ def create_process_tree(event_log):
         process_tree.append(pid_dict)
     return process_tree
 
-def match_cmdline(wmi, network, event_log):
-    # Matching command line between 3 modules WMI, Network and Event log
-    for i in wmi:
-        for j in event_log:
-            # Matching based on event log id 5861/1-4688/20 respectively
-            if ("Details" in j['Details'] and i['Arguments'].replace("\\","") in j['Details']['Details'].replace("\\",""))  \
-                or ("Cmdline" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Cmdline'].replace("\\","")) \
-                or ("Tgt" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Tgt'].replace("\\","").replace("\"","")):
-                if i not in matched_wmi_instances: matched_wmi_instances.append(i)
-                if j not in matched_log_records: matched_log_records.append(j)
-        for k in network:
-            if k['CommandLine'].replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
-                if i not in matched_wmi_instances: matched_wmi_instances.append(i)
-                if k not in matched_connections: matched_connections.append(k)
-    for i in event_log:
-        for j in network:
-            if "Cmdline" in i['Details'] and j['CommandLine'].replace("\"","").replace("\\","") in 	i['Details']['Cmdline'].replace("\"","").replace("\\",""):
-                if i not in matched_log_records: matched_log_records.append(i)
-                if k not in matched_connections: matched_connections.append(j)
+# def match_cmdline(wmi, network, event_log):
+#     # Matching command line between 3 modules WMI, Network and Event log
+#     for i in wmi:
+#         for j in event_log:
+#             # Matching based on event log id 5861/1-4688/20 respectively
+#             if ("Details" in j['Details'] and i['Arguments'].replace("\\","") in j['Details']['Details'].replace("\\",""))  \
+#                 or ("Cmdline" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Cmdline'].replace("\\","")) \
+#                 or ("Tgt" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Tgt'].replace("\\","").replace("\"","")):
+#                 print()
+#                 # if i not in matched_wmi_instances: matched_wmi_instances.append(i)
+#                 # if j not in matched_log_records: matched_log_records.append(j)
+#         for k in network:
+#             if k['CommandLine'].replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
+#                 print()
+#                 # if i not in matched_wmi_instances: matched_wmi_instances.append(i)
+#                 # if k not in matched_connections: matched_connections.append(k)
+#     for i in event_log:
+#         for j in network:
+#             if "Cmdline" in i['Details'] and j['CommandLine'].replace("\"","").replace("\\","") in 	i['Details']['Cmdline'].replace("\"","").replace("\\",""):
+#                 print()
+#                 # if i not in matched_log_records: matched_log_records.append(i)
+#                 # if k not in matched_connections: matched_connections.append(j)
 
 def match_pid_name_dll(event_log, process, network):
     # Value of Detected key in DLL attribute: 0 means the process had loaded dll, 1 means that dll was loaded and detected as suspicious
@@ -168,6 +179,17 @@ def match_pid_name_network(network):
             for conn in connections:
                 malware_instances[index].add_network_activity(proc,conn)
 
+def match_cmdline(wmi):
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            # malware.process[proc][0] is command line of process
+            if malware.process[proc][0] != "":
+                wmiConsumers = wmi_to_cmdline(wmi,malware.process[proc][0])
+                if len(wmiConsumers) != 0:
+                    for consumer in wmiConsumers:
+                        if consumer not in malware_instances[index].wmi:
+                            malware_instances[index].add_wmi(consumer)
+    
 def creat_object(process_tree, event_log, process, network=None):
     for i in process_tree:
         malware_instances.append(Malware(i))
@@ -217,41 +239,48 @@ def matching(event_log, process, network, registry=None, wmi=None,files=None):
     creat_object(create_process_tree(event_log),event_log,process,network)
     match_pid_name_dll(event_log,process,network)
     match_pid_name_network(network)
+    match_cmdline(wmi)
     for i in malware_instances:
         i.display()
         print("")
 if __name__ == "__main__":
         # Initializing input for testing
-    network = []
-    event_log = []
-    registry = []
-    process = []
+    # network = []
+    # event_log = []
+    # registry = []
+    # process = []
 
-    filepath = ".\\output\\Network_module.json"
-    with open(filepath,"r") as f:
-        network = eval(f.read())
-    f.close()
+    # filepath = ".\\output\\Network_module.json"
+    # with open(filepath,"r") as f:
+    #     network = eval(f.read())
+    # f.close()
 
-    filepath = ".\\output\\HollowsHunter\\summary.json"
-    with open(filepath,"r") as f:
-        process = eval(f.read())
-    f.close()
+    # filepath = ".\\output\\HollowsHunter\\summary.json"
+    # with open(filepath,"r") as f:
+    #     process = eval(f.read())
+    # f.close()
 
-    filepath = ".\\output\\Registry_module.json"
-    with open(filepath,"r") as f:
-        # Normalizing Registry key path
-        registry = eval(f.read().replace("null","0")\
-                        .replace("HKEY_LOCAL_MACHINE","HKLM")\
-                        .replace("HKEY_CLASSES_ROOT","HKCR")\
-                        .replace("HKEY_CURRENT_USER","HKCU")\
-                        .replace("HKEY_USERS","HKU")\
-                        .replace("HKEY_CURRENT_CONFIG","HKCC"))
-    f.close()
-    
-    filepath = ".\\output\\event-log-module-output.jsonl"
-    with open(filepath,"r") as file:
-        for line in file:
-            event_log.append(json.loads(line))
-    process_tree = create_process_tree(event_log)
-        # Displaying suspicious objects
-    matching(event_log, process, network)
+    # filepath = ".\\output\\Registry_module.json"
+    # with open(filepath,"r") as f:
+    #     # Normalizing Registry key path
+    #     registry = eval(f.read().replace("null","0")\
+    #                     .replace("HKEY_LOCAL_MACHINE","HKLM")\
+    #                     .replace("HKEY_CLASSES_ROOT","HKCR")\
+    #                     .replace("HKEY_CURRENT_USER","HKCU")\
+    #                     .replace("HKEY_USERS","HKU")\
+    #                     .replace("HKEY_CURRENT_CONFIG","HKCC"))
+    # f.close()
+    print("")
+    # filepath = ".\\output\\event-log-module-output.jsonl"
+    # with open(filepath,"r") as file:
+    #     for line in file:
+    #         event_log.append(json.loads(line))
+    # process_tree = create_process_tree(event_log)
+    #     # Displaying suspicious objects
+    # matching(event_log, process, network)
+    # creat_object(create_process_tree(event_log),event_log,process,network)
+    # match_pid_name_dll(event_log,process,network)
+    # match_pid_name_network(network)
+    # for index, malware in enumerate(malware_instances):
+    #     for proc in malware.process:
+    #         print(malware.process[proc])
