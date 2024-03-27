@@ -5,11 +5,14 @@ from collections import defaultdict
 
 malware_instances = []
 
-def event_id_8(event_log):
+def event_id_8(event_log, proc):
     result = []
-    for i in event_log:
-        if i['EventID'] == 8 and ('hollows_hunter64.exe' not in i['Details']['SrcProc']):
-            tmp = (i['Details']['SrcPID'], i['Details']['SrcProc'], i['Details']['TgtPID'], i['Details']['TgtProc'])
+    for event in event_log:
+        if event['EventID'] == 8 \
+            and ('hollows_hunter64.exe' not in event['Details']['SrcProc']) \
+            and event['Details']['SrcPID'] == proc[0] \
+            and event['Details']['SrcProc'] == proc[1]:
+            tmp = event['Details']['StartModule'] + f"({event['Details']['TgtProc']})"
             result.append(tmp)
     return result
 
@@ -155,6 +158,9 @@ def match_pid_name_dll(event_log, process, network):
         for proc in malware.process:
             event_log_matches = event_id_11_to_dll(event_log,proc)
             for i in event_log_matches:
+                malware_instances[index].add_dll(proc,(i,1))
+            injection_matches = event_id_8(event_log,proc)
+            for i in injection_matches:
                 malware_instances[index].add_dll(proc,(i,1))
             process_matches = hollowsHunter_to_dll(process,proc)
             for i in process_matches:
