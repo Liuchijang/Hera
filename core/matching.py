@@ -237,6 +237,7 @@ def matching(event_log, process, network, registry=None, wmi=None,files=None):
     match_pid_name_dll(event_log,process,network)
     match_pid_name_network(network)
     match_pid_name_registry(event_log)
+    match_pid_name_files(event_log)
     for i in malware_instances:
         i.display()
         print("")
