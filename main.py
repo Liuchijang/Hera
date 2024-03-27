@@ -1,7 +1,6 @@
 import sys
 import argparse
 import subprocess
-import ctypes
 sys.path.append('./config/config_ui')
 sys.path.append('./core')
 sys.path.append('./plugins')
@@ -15,7 +14,7 @@ from plugins.registry import registry_module
 from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
 from core.condition import *
-from core.matching import matching
+from core.matching import matching,test
 
 if __name__ == "__main__":          
         if check_port(8001):
@@ -38,7 +37,6 @@ if __name__ == "__main__":
         create_api_config_command = [velociraptor_executable, "--config", server_config, "config", "api_client", "--name", "admin", "--role", "administrator", api_config]
         subprocess.run(create_api_config_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         command = [velociraptor_executable, "--definitions", artifacts_folder, "--config", server_config, "frontend"]
-        # print(command)
         try:
                 outputFolder = create_new_folder(".", "output")
                 extractFolder = create_new_folder(outputFolder,"extract")
@@ -54,11 +52,13 @@ if __name__ == "__main__":
                 networkOutput = network_module(outputFolder,args.verbose,args.save)
                 regOutput = registry_module(outputFolder,args.verbose,args.save)
                 if args.fast:
-                        matching(processOutput, regOutput, networkOutput, wmiOutput)
+                        matching(eventLogOutput,processOutput, networkOutput, regOutput, wmiOutput)
                 else:
                         fileOutput = fileScan_module(outputFolder,args.verbose,args.save)
-                        matching(processOutput, regOutput, networkOutput, wmiOutput, fileOutput)
+                        matching(eventLogOutput,processOutput, networkOutput, regOutput, wmiOutput, fileOutput)
                 create_report()
+        except KeyboardInterrupt:
+                print("User cancelled the operation.")
         except Exception as e:
                 print(f"An error occurred: {e}")
         finally:
