@@ -1,6 +1,7 @@
 from malware import *
 import json
 from collections import defaultdict
+import os
 
 
 malware_instances = []
@@ -34,6 +35,20 @@ def event_id_11_to_dll(event_log, proc):
             and event['Details']['Rule'] == 'DLL'  \
             and event['Details']['PID'] == proc[0] \
             and event['Details']['Proc'] == proc[1]:
+            result.append(event['Details']['Path'])
+    return result
+
+def event_id_11_to_file(event_log, proc):
+    # proc[0] is PID, proc[1] is Process Name
+    result = []
+    currentDirectory = os.getcwd()
+    for event in event_log:
+        if event['EventID'] == 11 \
+            and 'Rule' in event['Details']\
+            and event['Details']['Rule'] != 'DLL'  \
+            and event['Details']['PID'] == proc[0] \
+            and event['Details']['Proc'] == proc[1]\
+            and currentDirectory not in event['Details']['Path']:
             result.append(event['Details']['Path'])
     return result
 
@@ -74,6 +89,13 @@ def networkConnection(network, proc):
             and conn['Pid'] == proc[0]:
             connection = {'SrcIP': conn['SrcIP'],'SrcPort': conn['SrcPort'],'DestIP': conn['DestIP'],'DestPort': conn['DestPort']}
             result.append(connection)
+    return result
+
+def wmi_to_cmdline(wmi, commandline):
+    result = []
+    for i in wmi:
+        if 'Arguments' in i and commandline.replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
+            result.append((i['Consumer Name'],i['Arguments']))
     return result
 
 def create_process_tree(event_log):
@@ -132,25 +154,25 @@ def create_process_tree(event_log):
         process_tree.append(pid_dict)
     return process_tree
 
-def match_cmdline(wmi, network, event_log):
-    # Matching command line between 3 modules WMI, Network and Event log
-    for i in wmi:
-        for j in event_log:
-            # Matching based on event log id 5861/1-4688/20 respectively
-            if ("Details" in j['Details'] and i['Arguments'].replace("\\","") in j['Details']['Details'].replace("\\",""))  \
-                or ("Cmdline" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Cmdline'].replace("\\","")) \
-                or ("Tgt" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Tgt'].replace("\\","").replace("\"","")):
-                if i not in matched_wmi_instances: matched_wmi_instances.append(i)
-                if j not in matched_log_records: matched_log_records.append(j)
-        for k in network:
-            if k['CommandLine'].replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
-                if i not in matched_wmi_instances: matched_wmi_instances.append(i)
-                if k not in matched_connections: matched_connections.append(k)
-    for i in event_log:
-        for j in network:
-            if "Cmdline" in i['Details'] and j['CommandLine'].replace("\"","").replace("\\","") in 	i['Details']['Cmdline'].replace("\"","").replace("\\",""):
-                if i not in matched_log_records: matched_log_records.append(i)
-                if k not in matched_connections: matched_connections.append(j)
+# def match_cmdline(wmi, network, event_log):
+#     # Matching command line between 3 modules WMI, Network and Event log
+#     for i in wmi:
+#         for j in event_log:
+#             # Matching based on event log id 5861/1-4688/20 respectively
+#             if ("Details" in j['Details'] and i['Arguments'].replace("\\","") in j['Details']['Details'].replace("\\",""))  \
+#                 or ("Cmdline" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Cmdline'].replace("\\","")) \
+#                 or ("Tgt" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Tgt'].replace("\\","").replace("\"","")):
+#                 if i not in matched_wmi_instances: matched_wmi_instances.append(i)
+#                 if j not in matched_log_records: matched_log_records.append(j)
+#         for k in network:
+#             if k['CommandLine'].replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
+#                 if i not in matched_wmi_instances: matched_wmi_instances.append(i)
+#                 if k not in matched_connections: matched_connections.append(k)
+#     for i in event_log:
+#         for j in network:
+#             if "Cmdline" in i['Details'] and j['CommandLine'].replace("\"","").replace("\\","") in 	i['Details']['Cmdline'].replace("\"","").replace("\\",""):
+#                 if i not in matched_log_records: matched_log_records.append(i)
+#                 if k not in matched_connections: matched_connections.append(j)
 
 def match_pid_name_dll(event_log, process, network):
     # Value of Detected key in DLL attribute: 0 means the process had loaded dll, 1 means that dll was loaded and detected as suspicious
@@ -183,9 +205,23 @@ def match_pid_name_registry(event_log):
 def match_pid_name_files(event_log):
     for index, malware in enumerate(malware_instances):
         for proc in malware.process:
-            result = event_id_8(event_log, proc)
-            for i in result:    
-                malware_instances[index].add_file(proc, i)
+            injected_file = event_id_8(event_log, proc)
+            for i in injected_file:
+                malware_instances[index].add_file(proc, (i,"injected"))
+            created_files = event_id_11_to_file(event_log,proc)
+            for i in created_files:
+                malware_instances[index].add_file(proc,(i,"created"))
+
+def match_cmdline(wmi):
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            # malware.process[proc][0] is command line of process
+            if malware.process[proc][0] != "":
+                wmiConsumers = wmi_to_cmdline(wmi,malware.process[proc][0])
+                if len(wmiConsumers) != 0:
+                    for consumer in wmiConsumers:
+                        if consumer not in malware_instances[index].wmi:
+                            malware_instances[index].add_wmi(consumer)
 
 def creat_object(process_tree, event_log, process, network=None):
     for i in process_tree:
@@ -238,6 +274,7 @@ def matching(event_log, process, network, registry=None, wmi=None,files=None):
     match_pid_name_network(network)
     match_pid_name_registry(event_log)
     match_pid_name_files(event_log)
+    if wmi: match_cmdline(wmi)
     for i in malware_instances:
         i.display()
         print("")
