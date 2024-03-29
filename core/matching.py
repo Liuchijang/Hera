@@ -17,12 +17,23 @@ def event_id_8(event_log, proc):
             result.append(tmp)
     return result
 
-def event_id_13(event_log, proc):
+def event_id_13_to_reg(event_log, proc):
     result = []
     for event in event_log:
         if event['EventID'] == 13 \
             and event['Details']['PID'] == proc[0] \
             and event['Details']['Proc'] == proc[1]:
+            tmp = (event['Details']['TgtObj'], event['Details'][''])
+            result.append(tmp)
+    return result
+
+def event_id_13_to_cmdline(event_log, proc, cmdline):
+    result = []
+    for event in event_log:
+        if event['EventID'] == 13 \
+            and event['Details']['PID'] == proc[0] \
+            and event['Details']['Proc'] == proc[1]\
+            and (event['Details'][''] in cmdline or cmdline in event['Details']['']):
             tmp = (event['Details']['TgtObj'], event['Details'][''])
             result.append(tmp)
     return result
@@ -98,6 +109,20 @@ def wmi_to_cmdline(wmi, commandline):
             result.append((i['Consumer Name'],i['Arguments']))
     return result
 
+def reg_to_cmdline(reg, commandline, result):
+    for i in reg:
+        if type(i['Contents']) == type(commandline) \
+            and (i['Contents'] in commandline or commandline in i['Contents']):
+            result.append((i['ValueName'],i['Contents']))
+    return result
+
+def file_to_cmdline(files, commandline):
+    result = []
+    for file in files:
+        if file['OSPath'].split("\\")[-1] in commandline:
+            result.append(file['OSPath'])
+    return result
+
 def create_process_tree(event_log):
     # Hiển thị cây quan hệ giữa PID và ProcessId
     lst = []
@@ -154,27 +179,7 @@ def create_process_tree(event_log):
         process_tree.append(pid_dict)
     return process_tree
 
-# def match_cmdline(wmi, network, event_log):
-#     # Matching command line between 3 modules WMI, Network and Event log
-#     for i in wmi:
-#         for j in event_log:
-#             # Matching based on event log id 5861/1-4688/20 respectively
-#             if ("Details" in j['Details'] and i['Arguments'].replace("\\","") in j['Details']['Details'].replace("\\",""))  \
-#                 or ("Cmdline" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Cmdline'].replace("\\","")) \
-#                 or ("Tgt" in j['Details'] and i['Arguments'].replace("\\","") == j['Details']['Tgt'].replace("\\","").replace("\"","")):
-#                 if i not in matched_wmi_instances: matched_wmi_instances.append(i)
-#                 if j not in matched_log_records: matched_log_records.append(j)
-#         for k in network:
-#             if k['CommandLine'].replace("\"","").replace("\\","") in i['Arguments'].replace("\"","").replace("\\",""):
-#                 if i not in matched_wmi_instances: matched_wmi_instances.append(i)
-#                 if k not in matched_connections: matched_connections.append(k)
-#     for i in event_log:
-#         for j in network:
-#             if "Cmdline" in i['Details'] and j['CommandLine'].replace("\"","").replace("\\","") in 	i['Details']['Cmdline'].replace("\"","").replace("\\",""):
-#                 if i not in matched_log_records: matched_log_records.append(i)
-#                 if k not in matched_connections: matched_connections.append(j)
-
-def match_pid_name_dll(event_log, process, network):
+def match_pid_name_dll(event_log, process, network=None):
     # Value of Detected key in DLL attribute: 0 means the process had loaded dll, 1 means that dll was loaded and detected as suspicious
     for index, malware in enumerate(malware_instances):
         for proc in malware.process:
@@ -184,9 +189,10 @@ def match_pid_name_dll(event_log, process, network):
             process_matches = hollowsHunter_to_dll(process,proc)
             for i in process_matches:
                 malware_instances[index].add_dll(proc,(i,1))
-            network_matches = network_to_dll(network,proc)
-            for i in network_matches:
-                malware_instances[index].add_dll(proc,(i,0))
+            if network:
+                network_matches = network_to_dll(network,proc)
+                for i in network_matches:
+                    malware_instances[index].add_dll(proc,(i,0))
 
 def match_pid_name_network(network):
     for index, malware in enumerate(malware_instances):
@@ -198,7 +204,7 @@ def match_pid_name_network(network):
 def match_pid_name_registry(event_log):
     for index, malware in enumerate(malware_instances):
         for proc in malware.process:
-            result = event_id_13(event_log, proc)
+            result = event_id_13_to_reg(event_log, proc)
             for i in result:    
                 malware_instances[index].add_registry_entry(proc, i)
 
@@ -212,18 +218,33 @@ def match_pid_name_files(event_log):
             for i in created_files:
                 malware_instances[index].add_file(proc,(i,"created"))
 
-def match_cmdline(wmi):
+def match_cmdline(event_log, wmi,reg,files=None):
     for index, malware in enumerate(malware_instances):
         for proc in malware.process:
             # malware.process[proc][0] is command line of process
             if malware.process[proc][0] != "":
                 wmiConsumers = wmi_to_cmdline(wmi,malware.process[proc][0])
-                if len(wmiConsumers) != 0:
+                if len(wmiConsumers) > 0:
                     for consumer in wmiConsumers:
                         if consumer not in malware_instances[index].wmi:
                             malware_instances[index].add_wmi(consumer)
+                regKeys_eventID13 = event_id_13_to_cmdline(event_log,proc,malware.process[proc][0])
+                regKeys = reg_to_cmdline(reg,malware.process[proc][0],regKeys_eventID13)
+                if len(regKeys) > 0:
+                    for regkey in regKeys:
+                        if regkey not in malware_instances[index].registry:
+                            malware_instances[index].add_registry_entry(proc,regkey)
+                if files and len(files) > 0: 
+                    detected = file_to_cmdline(files,malware.process[proc][0])
+                    if len(detected) > 0:
+                        for file in detected:
+                            if file not in malware_instances[index].files:
+                                # detected means that it is detected by file module
+                                malware_instances[index].add_file(proc,(file,"detected"))
+                
+                
 
-def creat_object(process_tree, event_log, process, network=None):
+def creat_object(process_tree, event_log, process, network):
     for i in process_tree:
         malware_instances.append(Malware(i))
     for sus in process['suspicious']:
@@ -246,16 +267,17 @@ def creat_object(process_tree, event_log, process, network=None):
                 #             else: malware.add_file((i[j]['module_file'],1))
                 malware_instances.append(malware)
         f.close()
-    for conn in network:
-        isContained = False
-        for m in malware_instances:
-            if (conn['Pid'],conn['Path'])  in m.process:
-                isContained = True
-        if not isContained: 
-            processBehavior = defaultdict(list)
-            processBehavior[conn['Pid'],conn['Path']] = (conn['CommandLine'], 0)
-            malware = Malware(processBehavior)
-            malware_instances.append(malware)
+    if len(network) > 0:
+        for conn in network:
+            isContained = False
+            for m in malware_instances:
+                if (conn['Pid'],conn['Path'])  in m.process:
+                    isContained = True
+            if not isContained: 
+                processBehavior = defaultdict(list)
+                processBehavior[conn['Pid'],conn['Path']] = (conn['CommandLine'], 0)
+                malware = Malware(processBehavior)
+                malware_instances.append(malware)
     for event in event_log:
         if event['EventID'] == 13:
             isContained = False
@@ -268,13 +290,17 @@ def creat_object(process_tree, event_log, process, network=None):
                 malware = Malware(processBehavior)
                 malware_instances.append(malware)
 
-def matching(event_log, process, network, registry=None, wmi=None,files=None):
+def matching(event_log, process, network, registry, wmi,files=None):
     creat_object(create_process_tree(event_log),event_log,process,network)
     match_pid_name_dll(event_log,process,network)
-    match_pid_name_network(network)
+    if len(network) > 0: 
+        match_pid_name_network(network)
     match_pid_name_registry(event_log)
     match_pid_name_files(event_log)
-    if wmi: match_cmdline(wmi)
+    if files: 
+        match_cmdline(event_log,wmi,registry,files)
+    else: 
+        match_cmdline(event_log,wmi,registry)
     for i in malware_instances:
         i.display()
         print("")
@@ -286,17 +312,17 @@ if __name__ == "__main__":
     process = []
 
     filepath = ".\\output\\Network_module.json"
-    with open(filepath,"r") as f:
+    with open(filepath,"r",encoding='latin-1') as f:
         network = eval(f.read())
     f.close()
 
     filepath = ".\\output\\HollowsHunter\\summary.json"
-    with open(filepath,"r") as f:
+    with open(filepath,"r",encoding='latin-1') as f:
         process = eval(f.read())
     f.close()
 
     filepath = ".\\output\\Registry_module.json"
-    with open(filepath,"r") as f:
+    with open(filepath,"r",encoding='latin-1') as f:
         # Normalizing Registry key path
         registry = eval(f.read().replace("null","0")\
                         .replace("HKEY_LOCAL_MACHINE","HKLM")\
@@ -307,7 +333,7 @@ if __name__ == "__main__":
     f.close()
     
     filepath = ".\\output\\event-log-module-output.jsonl"
-    with open(filepath,"r") as file:
+    with open(filepath,"r",encoding='latin-1') as file:
         for line in file:
             event_log.append(json.loads(line))
     process_tree = create_process_tree(event_log)
