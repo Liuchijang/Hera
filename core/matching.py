@@ -291,13 +291,16 @@ def creat_object(process_tree, event_log, process, network):
                 malware_instances.append(malware)
 
 def matching(event_log, process, network, registry, wmi,files=None):
+    reg_temp = []
     for i in registry:
-        i.replace("null","0")\
+        temp = eval(str(i).replace("null","0")\
             .replace("HKEY_LOCAL_MACHINE","HKLM")\
             .replace("HKEY_CLASSES_ROOT","HKCR")\
             .replace("HKEY_CURRENT_USER","HKCU")\
             .replace("HKEY_USERS","HKU")\
-            .replace("HKEY_CURRENT_CONFIG","HKCC")
+            .replace("HKEY_CURRENT_CONFIG","HKCC"))
+        reg_temp.append(temp)
+    registry = reg_temp
     creat_object(create_process_tree(event_log),event_log,process,network)
     match_pid_name_dll(event_log,process,network)
     if len(network) > 0: 
@@ -332,12 +335,12 @@ def matching(event_log, process, network, registry, wmi,files=None):
 #     filepath = ".\\output\\Registry_module.json"
 #     with open(filepath,"r",encoding='latin-1') as f:
 #         # Normalizing Registry key path
-#         registry = eval(f.read().replace("null","0")\
-#                         .replace("HKEY_LOCAL_MACHINE","HKLM")\
-#                         .replace("HKEY_CLASSES_ROOT","HKCR")\
-#                         .replace("HKEY_CURRENT_USER","HKCU")\
-#                         .replace("HKEY_USERS","HKU")\
-#                         .replace("HKEY_CURRENT_CONFIG","HKCC"))
+        # registry = eval(f.read().replace("null","0")\
+        #                 .replace("HKEY_LOCAL_MACHINE","HKLM")\
+        #                 .replace("HKEY_CLASSES_ROOT","HKCR")\
+        #                 .replace("HKEY_CURRENT_USER","HKCU")\
+        #                 .replace("HKEY_USERS","HKU")\
+        #                 .replace("HKEY_CURRENT_CONFIG","HKCC"))
 #     f.close()
     
 #     filepath = ".\\output\\event-log-module-output.jsonl"
