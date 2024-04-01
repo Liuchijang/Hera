@@ -320,6 +320,7 @@ def matching(event_log, process, network, registry, wmi,files=None):
     for i in malware_instances_res:
         i.display()
         print("")
+    malware_instances = malware_instances_res
 
 if __name__ == "__main__":
         # Initializing input for testing
