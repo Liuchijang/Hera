@@ -76,7 +76,7 @@ def hollowsHunter_to_dll(process, proc):
                 for j in i.keys():
                     # whitelisting known legit dll
                     if 'module_file' in i[j]\
-                        and i[j]['module_file'] != "C:\Windows\System32\\ntdll.dll":
+                        and i[j]['module_file'] != "C:\\Windows\\System32\\ntdll.dll":
                         if "dll" in i[j]['module_file']:
                             result.append(i[j]['module_file'])
         f.close()
