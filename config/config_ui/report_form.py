@@ -97,7 +97,9 @@ def malware_table(malware_instances):
                     <div>Malware {}</div>
                 </td>
                 <td class="value">
-                    <div class="field-group">{}</div>
+                    <div class="field-group">
+                        <pre>{}</pre>
+                    </div>
                 </td>
             </tr>
         """.format(index+1, malware.display())
@@ -131,19 +133,20 @@ def report_form(
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Report Form</title>
                 <style>
-                    table {{
+                    table {
                         border-collapse: collapse;
-                        width: 50%;
+                        width: 100%;
                         margin-top: 20px;
-                    }}
-                    th, td {{
+                    }
+                    th, td {
                         border: 1px solid #dddddd;
                         text-align: left;
                         padding: 8px;
-                    }}
-                    th {{
+                        min-width: 100px;
+                    }
+                    th {
                         background-color: #f2f2f2;
-                    }}
+                    }
                 </style>
             </head>
             <body>
