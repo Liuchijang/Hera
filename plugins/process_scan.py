@@ -23,7 +23,7 @@ def process_module( verbose=False):
                     for i in data['scans']:
                         for j in i.keys():
                             if 'module_file' in i[j]:
-                                if i[j]['module_file'].replace("\\","").lower() == "C:\Windows\System32\\ntdll.dll".replace("\\","").lower(): continue
+                                if i[j]['module_file'].replace("\\","").lower() == "C:\\Windows\\System32\\ntdll.dll".replace("\\","").lower(): continue
                                 print("Process ID:",suspicious['pid'])
                                 print("Process Name:",suspicious['name'])
                                 print("Image Fullpath:",data['main_image_path'])

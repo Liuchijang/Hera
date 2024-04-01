@@ -37,6 +37,7 @@ def registry_module(outputFolder, verbose=False, save_to_file=False):
             json.dump(result,f,indent=4)
             print(f"Saved Registry module output at {filepath}")
     print("Scan Registry hives completed.")
+    return result
 
 
 if __name__ == "__main__":
