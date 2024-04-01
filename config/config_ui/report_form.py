@@ -131,19 +131,19 @@ def report_form(
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Report Form</title>
                 <style>
-                    table {{
+                    table {
                         border-collapse: collapse;
                         width: 50%;
                         margin-top: 20px;
-                    }}
-                    th, td {{
+                    }
+                    th, td {
                         border: 1px solid #dddddd;
                         text-align: left;
                         padding: 8px;
-                    }}
-                    th {{
+                    }
+                    th {
                         background-color: #f2f2f2;
-                    }}
+                    }
                 </style>
             </head>
             <body>
