@@ -9,7 +9,7 @@ import socket
 import uuid
 from config.config_ui.report_form import report_form
 from core.velociraptor_sever_api import Run_velociraptor_query
-from core.matching import malware_instances
+from core.matching import malware_instances_res
 
 computerName = ""
 platform = ""
@@ -193,7 +193,7 @@ def create_report():
                 startTime, 
                 endTime,
                 scanID,
-                malware_instances
+                malware_instances_res
         )
 
 

@@ -6,6 +6,7 @@ import json
 
 
 malware_instances = []
+malware_instances_res = []
 
 def event_id_8(event_log, proc):
     result = []
@@ -246,6 +247,7 @@ def match_cmdline(event_log, wmi,reg,files=None):
                 
 
 def creat_object(process_tree, event_log, process, network):
+    global malware_instances
     for i in process_tree:
         malware_instances.append(Malware(i))
     for sus in process['suspicious']:
@@ -285,6 +287,8 @@ def creat_object(process_tree, event_log, process, network):
                 malware_instances.append(malware)
 
 def matching(event_log, process, network, registry, wmi,files=None):
+    global malware_instances 
+    global malware_instances_res
     reg_temp = []
     for i in registry:
         temp = eval(str(i).replace("null","0")\
@@ -305,22 +309,20 @@ def matching(event_log, process, network, registry, wmi,files=None):
         match_cmdline(event_log,wmi,registry,files)
     else: 
         match_cmdline(event_log,wmi,registry)
-    malware_instances_res = []
-    print("__________________________________Before Filtering__________________________________")
-    for i in malware_instances:
-        i.display()
-        print("")
     ## Filtering
     for index, malware in enumerate(malware_instances):
         for proc in malware.process:
             if malware.process[proc][0] != "" and check_file(proc[1]) == 1: 
                 malware_instances_res.append(malware_instances[index])
+    
     ## Displaying
-    print("__________________________________After Filtering__________________________________")
-    for i in malware_instances_res:
-        i.display()
-        print("")
-    malware_instances = malware_instances_res
+    if len(malware_instances_res) == 0:
+        print("Do not detect any malware behavior")
+    else:
+        print("__________________________________After Filtering__________________________________")
+        for i in malware_instances_res:
+            i.display()
+            print("")
 
 if __name__ == "__main__":
         # Initializing input for testing
@@ -332,12 +334,12 @@ if __name__ == "__main__":
     # filepath = ".\\output\\Network_module.json"
     # with open(filepath,"r",encoding='latin-1') as f:
     #     network = eval(f.read())
-    # f.close()
+
 
     # filepath = ".\\output\\HollowsHunter\\summary.json"
     # with open(filepath,"r",encoding='latin-1') as f:
     #     process = eval(f.read())
-    # f.close()
+
 
     # filepath = ".\\output\\Registry_module.json"
     # with open(filepath,"r",encoding='latin-1') as f:
@@ -347,12 +349,14 @@ if __name__ == "__main__":
     #                     .replace("HKEY_CURRENT_USER","HKCU")\
     #                     .replace("HKEY_USERS","HKU")\
     #                     .replace("HKEY_CURRENT_CONFIG","HKCC"))
-    # f.close()
-    
+        
+
     # filepath = ".\\output\\event-log-module-output.jsonl"
     # with open(filepath,"r",encoding='latin-1') as file:
     #     for line in file:
     #         event_log.append(json.loads(line))
+            
+            
     # process_tree = create_process_tree(event_log)
     #     # Displaying suspicious objects
     # matching(event_log, process, network, registry, [])
