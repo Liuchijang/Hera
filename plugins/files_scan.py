@@ -40,6 +40,9 @@ def check_file(file):
     # file=C:\\Windows\\explorer.exe
     query = "SELECT OSPath, Name, hash(path=OSPath, hashselect='MD5').MD5 as MD5, authenticode(filename=OSPath).Trusted as Trust FROM glob(globs='{}')".format(file.replace("\\","//"))
     output = Run_velociraptor_query(query)
+    ## file does not exist
+    if output == '[]': 
+        return -1
     parsed = eval(output)
     if check_connect():
         #whitelisting known legit executable
