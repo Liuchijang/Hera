@@ -16,7 +16,11 @@ from plugins.wmi import wmi_module
 from core.condition import *
 from core.matching import matching
 
-if __name__ == "__main__":          
+if __name__ == "__main__":    
+        logo_filepath = ".\\data\\art\\logo.txt"
+        with open(logo_filepath,"r",encoding='utf-8') as f:
+                print(f.read())
+        f.close()      
         if check_port(8001):
                 print("Port 8001 is already in use!")
                 sys.exit()             
