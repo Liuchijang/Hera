@@ -5,7 +5,6 @@ sys.path.append('./config/config_ui')
 sys.path.append('./core')
 sys.path.append('./plugins')
 
-from config.config_ui.report_form import report_form
 from core.collection import *
 from plugins.event_log import event_log_module
 from plugins.process_scan import process_module  
