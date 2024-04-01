@@ -38,22 +38,22 @@ def fileScan_module(outputFolder, verbose=False,save_to_file=False):
 
 def check_file(file):
     # file=C:\\Windows\\explorer.exe
-    query = "SELECT OSPath, Name, hash(path=OSPath, hashselect='MD5').MD5 as MD5, authenticode(filename=OSPath).Trusted as Trust FROM glob(globs='{}')".format(file)
+    query = "SELECT OSPath, Name, hash(path=OSPath, hashselect='MD5').MD5 as MD5, authenticode(filename=OSPath).Trusted as Trust FROM glob(globs='{}')".format(file.replace("\\","//"))
     output = Run_velociraptor_query(query)
-    correctSyntax = re.sub(r"\]\[", ",",output)
-    parsed = eval(correctSyntax)
+    parsed = eval(output)
     if check_connect():
         #whitelisting known legit executable
-        if parsed['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
-        check = check_virustotal("check_hash", parsed['MD5'])
+        if parsed[0]['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
+        check = check_virustotal("check_hash", parsed[0]['MD5'])
         if check == 1:
             return 1
     else:
         with open("./data/malicious_MD5.txt", "r") as f:
             malicious_MD5 = set(line.strip() for line in f)
-        if parsed['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
-        if parsed['MD5'] in malicious_MD5:
+        if parsed[0]['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
+        if parsed[0]['MD5'] in malicious_MD5:
             return 1
+    return 0
     
 
 if __name__ == "__main__":
