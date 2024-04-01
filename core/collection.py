@@ -1,6 +1,5 @@
 import os
 import re
-import ctypes
 import shutil
 import psutil
 from datetime import datetime
@@ -10,6 +9,7 @@ import socket
 import uuid
 from config.config_ui.report_form import report_form
 from core.velociraptor_sever_api import Run_velociraptor_query
+from core.matching import malware_instances
 
 computerName = ""
 platform = ""
@@ -192,7 +192,8 @@ def create_report():
                 adminRights, 
                 startTime, 
                 endTime,
-                scanID
+                scanID,
+                malware_instances
         )
 
 
