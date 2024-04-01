@@ -1,7 +1,8 @@
 from malware import *
-import json
 from collections import defaultdict
 import os
+from plugins.files_scan import check_file
+import json
 
 
 malware_instances = []
@@ -258,13 +259,6 @@ def creat_object(process_tree, event_log, process, network):
                 processBehavior = defaultdict(list)
                 processBehavior[proc['pid'], proc['main_image_path']] = ("", 0)
                 malware = Malware(processBehavior)
-                # for i in proc['scans']:
-                #     for j in i.keys():
-                #         if 'module_file' in i[j]:
-                #             # Whitelisting known legit dll
-                #             if i[j]['module_file'].replace("\\","").lower() == "C:\Windows\System32\\ntdll.dll".replace("\\","").lower(): continue
-                #             if "dll" in i[j]['module_file']: malware.add_dll((i[j]['module_file'],1))
-                #             else: malware.add_file((i[j]['module_file'],1))
                 malware_instances.append(malware)
         f.close()
     if len(network) > 0:
@@ -311,42 +305,53 @@ def matching(event_log, process, network, registry, wmi,files=None):
         match_cmdline(event_log,wmi,registry,files)
     else: 
         match_cmdline(event_log,wmi,registry)
+    malware_instances_res = []
+    print("__________________________________Before Filtering__________________________________")
     for i in malware_instances:
         i.display()
         print("")
+    ## Filtering
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            if malware.process[proc][0] != "" and check_file(proc[1]) == 1: 
+                malware_instances_res.append(malware_instances[index])
+    ## Displaying
+    print("__________________________________After Filtering__________________________________")
+    for i in malware_instances_res:
+        i.display()
+        print("")
 
-# if __name__ == "__main__":
-#         # Initializing input for testing
-#     network = []
-#     event_log = []
-#     registry = []
-#     process = []
+if __name__ == "__main__":
+        # Initializing input for testing
+    network = []
+    # event_log = []
+    # registry = []
+    # process = []
 
-#     filepath = ".\\output\\Network_module.json"
-#     with open(filepath,"r",encoding='latin-1') as f:
-#         network = eval(f.read())
-#     f.close()
+    # filepath = ".\\output\\Network_module.json"
+    # with open(filepath,"r",encoding='latin-1') as f:
+    #     network = eval(f.read())
+    # f.close()
 
-#     filepath = ".\\output\\HollowsHunter\\summary.json"
-#     with open(filepath,"r",encoding='latin-1') as f:
-#         process = eval(f.read())
-#     f.close()
+    # filepath = ".\\output\\HollowsHunter\\summary.json"
+    # with open(filepath,"r",encoding='latin-1') as f:
+    #     process = eval(f.read())
+    # f.close()
 
-#     filepath = ".\\output\\Registry_module.json"
-#     with open(filepath,"r",encoding='latin-1') as f:
-#         # Normalizing Registry key path
-        # registry = eval(f.read().replace("null","0")\
-        #                 .replace("HKEY_LOCAL_MACHINE","HKLM")\
-        #                 .replace("HKEY_CLASSES_ROOT","HKCR")\
-        #                 .replace("HKEY_CURRENT_USER","HKCU")\
-        #                 .replace("HKEY_USERS","HKU")\
-        #                 .replace("HKEY_CURRENT_CONFIG","HKCC"))
-#     f.close()
+    # filepath = ".\\output\\Registry_module.json"
+    # with open(filepath,"r",encoding='latin-1') as f:
+    #     registry = eval(f.read().replace("null","0")\
+    #                     .replace("HKEY_LOCAL_MACHINE","HKLM")\
+    #                     .replace("HKEY_CLASSES_ROOT","HKCR")\
+    #                     .replace("HKEY_CURRENT_USER","HKCU")\
+    #                     .replace("HKEY_USERS","HKU")\
+    #                     .replace("HKEY_CURRENT_CONFIG","HKCC"))
+    # f.close()
     
-#     filepath = ".\\output\\event-log-module-output.jsonl"
-#     with open(filepath,"r",encoding='latin-1') as file:
-#         for line in file:
-#             event_log.append(json.loads(line))
-#     process_tree = create_process_tree(event_log)
-#         # Displaying suspicious objects
-#     matching(event_log, process, network)
+    # filepath = ".\\output\\event-log-module-output.jsonl"
+    # with open(filepath,"r",encoding='latin-1') as file:
+    #     for line in file:
+    #         event_log.append(json.loads(line))
+    # process_tree = create_process_tree(event_log)
+    #     # Displaying suspicious objects
+    # matching(event_log, process, network, registry, [])
