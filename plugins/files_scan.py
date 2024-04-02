@@ -46,11 +46,11 @@ def check_file(file):
         #whitelisting known legit executable
         if parsed[0]['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
         check = check_virustotal("check_hash", parsed[0]['MD5'])
-        if check == 1:
+        if check == 1 or parsed[0]['Trust'] != "trusted":
             return 1
     else:
         if parsed[0]['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
-        if parsed[0]['Trust'] == "untrusted":
+        if parsed[0]['Trust'] != "trusted":
             return 1
     return 0
     
