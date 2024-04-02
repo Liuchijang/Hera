@@ -3,7 +3,6 @@ from collections import defaultdict
 import os
 from plugins.files_scan import check_file
 
-
 malware_instances = []
 malware_instances_res = []
 
@@ -368,7 +367,7 @@ def matching(event_log, process, network, registry, wmi,files=None):
         print("")
     for index, malware in enumerate(malware_instances):
         for proc in malware.process:
-            if len(malware.process[proc][0]) != 0 and check_file(proc[1]) != 0: 
+            if type(proc)==type(()) and len(malware.process[proc][0]) != 0 and check_file(proc[1]) != 0: 
                 if malware_instances[index] not in malware_instances_res: 
                     malware_instances_res.append(malware_instances[index])
     print("__________________________________After Filtering__________________________________")
