@@ -11,7 +11,6 @@ def get_registry_yaml_files(folder_path):
         if filename.startswith("Registry.") and filename.endswith(".yaml"):
             # Loại bỏ đuôi file (.yaml) và thêm tên file vào mảng
             registry_yaml_files.append(filename[:-5])
-
     return registry_yaml_files
 
 folder_path = ".//data//artifacts"
