@@ -1,5 +1,3 @@
-import os
-import re
 from core.velociraptor_sever_api import Run_velociraptor_query
 
 
@@ -8,7 +6,7 @@ def process_module( verbose=False):
     artifact = "Windows.Memory.LocalHollowsHunter"
     query = "select * from Artifact.{}()".format(artifact)
     Run_velociraptor_query(query)
-    with open(r".\output\HollowsHunter\summary.json","r") as file:
+    with open(r".\\output\\HollowsHunter\\summary.json","r") as file:
         output = file.read()
         parsedOutput = eval(output)
         print("Process Scan time:",parsedOutput['scan_date_time'],

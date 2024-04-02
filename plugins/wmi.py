@@ -1,4 +1,3 @@
-import sys
 import os
 import re
 import string
@@ -209,7 +208,6 @@ def wmi_module(inputFolder, outputFolder = None, verbose=False, savefile=False):
         lines_list.append(current_line)
         lines_list.pop(0)
     objects_file.close()
-    
     # write results to file. 
     if savefile:
         write_output(bindings_dict,consumer_dict,filter_dict,outputFolder)
@@ -219,11 +217,6 @@ def wmi_module(inputFolder, outputFolder = None, verbose=False, savefile=False):
     result = parse_WMI_output(consumer_dict)
     print("Scan WMI repository completed.")
     return result
-
-
-
-
-
 
 if __name__ == "__main__":
     wmi_module()
