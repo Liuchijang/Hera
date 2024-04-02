@@ -19,7 +19,6 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
             check = check_virustotal("check_ip", i['DestIP'])
             if i['Pid'] == currentPid: continue 
             if check == 1:
-                if verbose: print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
                 result.append(i)
     else:
         with open("./data/malicious_ip.txt", "r") as f:
@@ -30,6 +29,11 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
                 if i['Pid'] == currentPid: continue 
                 if verbose: print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
                 result.append(i)
+    if verbose:
+        print("Suspicious connection:")
+        for i in result:
+            print("Path: " + i["Path"] + '\n' + "CommandLine: " + i["CommandLine"] + '\n' + "Destination IP: " + i["DestIP"] + '\n')
+
     if save_to_file:
         filepath = os.path.join(outputFolder,"Network_module.json")
         with open(filepath, 'w') as f:

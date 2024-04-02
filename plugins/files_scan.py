@@ -18,15 +18,13 @@ def fileScan_module(outputFolder, verbose=False,save_to_file=False):
             if i['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": continue
             check = check_virustotal("check_hash", i['MD5'])
             if check == 1:
-                if verbose: print("Detected malicious file, FilePath: " + i['OSPath'])
+                if verbose: print("Detected suspicious file, FilePath: " + i['OSPath'])
                 result.append(i)
     else:
-        with open("./data/malicious_MD5.txt", "r") as f:
-            malicious_MD5 = set(line.strip() for line in f)
         for i in parsed:
             if i['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": continue
-            if i['MD5'] in malicious_MD5:
-                if verbose: print("Detected malicious file, FilePath: " + i['OSPath'])
+            if parsed[0]['Trust'] == "untrusted":
+                if verbose: print("Detected suspicious file, FilePath: " + i['OSPath'])
                 result.append(i)
     if save_to_file:
         filepath = os.path.join(outputFolder,"Files_module.json")
