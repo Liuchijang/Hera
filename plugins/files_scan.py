@@ -51,10 +51,8 @@ def check_file(file):
         if check == 1:
             return 1
     else:
-        with open("./data/malicious_MD5.txt", "r") as f:
-            malicious_MD5 = set(line.strip() for line in f)
         if parsed[0]['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
-        if parsed[0]['MD5'] in malicious_MD5:
+        if parsed[0]['Trust'] == "untrusted":
             return 1
     return 0
     
