@@ -103,7 +103,7 @@ def collect_necessary_evtx(outputFolder, verbose=False):
                 dest = os.path.join(outputFolder,filename)
                 query = f"SELECT copy(filename='{source}', accessor='ntfs', dest='{filename}') FROM scope()"
                 Run_velociraptor_query(query)
-                if verbose: print(f"Collect {source} successfully, saved in {dest}")
+                if verbose: print(f"Collect {source} successfully, saved at {dest}")
                 source = os.path.join(os.getcwd(),filename)
                 shutil.move(source, dest)
 
@@ -133,7 +133,7 @@ def collect_evtx_file(outputFolder, verbose=False):
             dest = os.path.join(outputFolder,filename)
             query = f"SELECT copy(filename='{source}', accessor='ntfs', dest='{filename}') FROM scope()"
             Run_velociraptor_query(query)
-            if verbose: print(f"Collect {source} successfully, saved in {dest}")
+            if verbose: print(f"Collect {source} successfully, saved at {dest}")
             source = os.path.join(os.getcwd(),filename)
             shutil.move(source, dest)
     print(f"Collecting completed, saved at folder {outputFolder}")
@@ -149,7 +149,7 @@ def collect_OBJECT_DATA(outputFolder,verbose=False):
         dest = os.path.join(outputFolder,filename)
         query1 = f"SELECT copy(filename='{source}', accessor='ntfs', dest='{filename}') FROM scope()"
         Run_velociraptor_query(query1)
-        if verbose: print(f"Collect {source} successfully, saved in {dest}")
+        if verbose: print(f"Collect {source} successfully, saved at {dest}")
         source = os.path.join(os.getcwd(),filename)
         shutil.move(source, dest)
     print(f"Collecting completed, saved at folder {outputFolder}")
