@@ -128,10 +128,10 @@ def reg_to_cmdline(reg, commandline, result):
                 result.append((i['ValueName'],i['Contents']))
     return result
 
-def file_to_cmdline(files, commandline):
+def file_to_cmdline(files, processName):
     result = []
     for file in files:
-        if file['OSPath'].split("\\")[-1] in commandline:
+        if file['OSPath'].split("\\")[-1] in processName:
             result.append(file['OSPath'])
     return result
 
@@ -248,10 +248,12 @@ def match_pid_name_files(event_log):
         for proc in malware.process:
             injected_file = event_id_8(event_log, proc)
             for i in injected_file:
-                malware_instances[index].add_file(proc, (i,"injected"))
+                if i not in malware_instances[index].files:
+                    malware_instances[index].add_file(proc, (i,"injected"))
             created_files = event_id_11_to_file(event_log,proc)
             for i in created_files:
-                malware_instances[index].add_file(proc,(i,"created"))
+                if i not in malware_instances[index].files:
+                    malware_instances[index].add_file(proc,(i,"created"))
 
 def match_cmdline(event_log, wmi,reg,files=None):
     for index, malware in enumerate(malware_instances):
@@ -269,15 +271,31 @@ def match_cmdline(event_log, wmi,reg,files=None):
                     for regkey in regKeys:
                         if regkey not in malware_instances[index].registry:
                             malware_instances[index].add_registry_entry(proc,regkey)
-                if files and len(files) > 0: 
-                    detected = file_to_cmdline(files,malware.process[proc][0])
-                    if len(detected) > 0:
-                        for file in detected:
-                            if file not in malware_instances[index].files:
-                                # detected means that it is detected by file module
+
+def match_files(files):
+    global malware_instances
+    for index, malware in enumerate(malware_instances):
+        for proc in malware.process:
+            detected = file_to_cmdline(files,proc[1])
+            if len(detected) > 0:
+                for file in detected:
+                    if len(malware_instances[index].files) == 0:
+                        if file == proc[1]: 
+                            malware_instances[index].add_file(proc,(file,"detected"))
+                        else:
+                            malware_instances[index].add_file(proc,(file,"contained"))
+                    else:
+                        contained = False
+                        for i in malware_instances[index].files:
+                        # "detected" means that it is detected by file module
+                        # "contained" means that it has similar filename to the process
+                            if proc in i:
+                                contained = True
+                        if not contained: 
+                            if file == proc[1]:
                                 malware_instances[index].add_file(proc,(file,"detected"))
-                
-                
+                            else:
+                                malware_instances[index].add_file(proc,(file,"contained"))
 
 def creat_object(process_tree, event_log, process, network):
     global malware_instances 
@@ -338,6 +356,8 @@ def matching(event_log, process, network, registry, wmi,files=None):
         match_pid_name_network(network)
     match_pid_name_registry(event_log)
     match_pid_name_files(event_log)
+    if files and len(files) > 0:
+        match_files(files)
     if files: 
         match_cmdline(event_log,wmi,registry,files)
     else: 
@@ -355,39 +375,3 @@ def matching(event_log, process, network, registry, wmi,files=None):
     for i in malware_instances_res:
         i.display()
         print("")
-
-# if __name__ == "__main__":
-#         # Initializing input for testing
-#     network = []
-#     event_log = []
-#     registry = []
-#     process = []
-
-#     filepath = ".\\output\\Network_module.json"
-#     with open(filepath,"r",encoding='latin-1') as f:
-#         network = eval(f.read())
-#     f.close()
-
-#     filepath = ".\\output\\HollowsHunter\\summary.json"
-#     with open(filepath,"r",encoding='latin-1') as f:
-#         process = eval(f.read())
-#     f.close()
-
-#     filepath = ".\\output\\Registry_module.json"
-#     with open(filepath,"r",encoding='latin-1') as f:
-#         # Normalizing Registry key path
-        # registry = eval(f.read().replace("null","0")\
-        #                 .replace("HKEY_LOCAL_MACHINE","HKLM")\
-        #                 .replace("HKEY_CLASSES_ROOT","HKCR")\
-        #                 .replace("HKEY_CURRENT_USER","HKCU")\
-        #                 .replace("HKEY_USERS","HKU")\
-        #                 .replace("HKEY_CURRENT_CONFIG","HKCC"))
-#     f.close()
-    
-#     filepath = ".\\output\\event-log-module-output.jsonl"
-#     with open(filepath,"r",encoding='latin-1') as file:
-#         for line in file:
-#             event_log.append(json.loads(line))
-#     process_tree = create_process_tree(event_log)
-#         # Displaying suspicious objects
-#     matching(event_log, process, network)
