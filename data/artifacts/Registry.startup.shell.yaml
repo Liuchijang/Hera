@@ -1,0 +1,40 @@
+name: Registry.startup.shell
+
+parameters:
+
+  - name: yaraRule
+    default: |
+      rule Rule {
+        strings:
+        $ = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
+        $ = "%ProgramData%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
+        $ = "%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
+        $ = /C:\\Users\\[^\\]+\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup/
+        condition:
+        not any of them
+      }
+
+sources:
+ - precondition:
+    SELECT OS from info() where OS = "windows"
+   queries:
+   
+   - |
+    Let reg = (
+      "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\Common Startup",
+      "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\Common Startup",
+      "HKEY_USERS\\*\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\Startup",
+      "HKEY_USERS\\*\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\Startup"
+     )
+    
+    Let regs <= SELECT FullPath from glob(
+        globs=reg,
+        accessor="reg"
+      )
+    // select * from regs
+
+   - |
+    SELECT File.FullPath as ValueName, File.Data.value as Contents, timestamp (epoch=File.Mtime. Sec) as ModTime FROM yara(
+      rules=yaraRule,
+      files=regs.FullPath,
+      accessor="reg")

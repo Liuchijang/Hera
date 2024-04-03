@@ -1,0 +1,32 @@
+name: Files.scan
+
+sources:
+ - precondition:
+    SELECT OS from info() where OS = "windows"
+   queries:
+   
+   - |
+    Let folder = (
+        "C:\\Windows\\System32\\*",
+        "C:\\Windows\\System32\\drivers\\**",
+        "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*",
+        "C:\\Users\\*\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*",
+        "C:\\Windows\\Temp\\**",
+        "C:\\Users\\*\\AppData\\Local\\Temp\\**",
+        "C:\\Users\\*\\Downloads\\**",
+        "C:\\Windows\\*",
+        "C:\\Windows\\System\\*",
+        "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\**",
+        "C:\\Windows\\System32\\Tasks\\**",
+        "C:\\Users\\*\\AppData\\Local\\*\\*",
+        "C:\\Users\\*\\AppData\\Roaming\\*\\*",
+        // "C:\\Program Files\\**",
+        // "C:\\Program Files (x86)\\**"
+        )
+
+    Let file = SELECT OSPath, hash(path=OSPath, hashselect="MD5").MD5 as MD5, authenticode(filename=OSPath).Trusted as Trust
+    FROM glob(globs=folder) where authenticode(filename=OSPath)
+    SELECT *
+    FROM file where Trust != "trusted"
+    
+
