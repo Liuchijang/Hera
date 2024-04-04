@@ -5,7 +5,7 @@ from core.velociraptor_sever_api import Run_velociraptor_query
 from core.check_virustotal import *
 
 def fileScan_module(outputFolder, verbose=False,save_to_file=False):
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nFiles scanning...")
+    print("+"*50 + "\nFiles scanning...")
     artifact = "Files.scan"
     query = "select * from Artifact.{}()".format(artifact)
     output = Run_velociraptor_query(query)
@@ -28,7 +28,7 @@ def fileScan_module(outputFolder, verbose=False,save_to_file=False):
                 result.append(i)
     if save_to_file:
         filepath = os.path.join(outputFolder,"Files_module.json")
-        with open(filepath, 'w') as f:
+        with open(filepath, 'w', encoding='utf-8-sig') as f:
             json.dump(result,f,indent=4)
             print(f"Saved file module output at {filepath}")
     print("Scan Files completed.")
@@ -45,6 +45,7 @@ def check_file(file):
     if check_connect():
         #whitelisting known legit executable
         if parsed[0]['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
+        print(f"Checking file: {parsed[0]['OSPath']}\n\tHash: {parsed[0]['MD5']}")
         check = check_virustotal("check_hash", parsed[0]['MD5'])
         if check == 1 or parsed[0]['Trust'] != "trusted":
             return 1

@@ -5,7 +5,7 @@ from core.velociraptor_sever_api import Run_velociraptor_query
 from core.check_virustotal import *
 
 def network_module(outputFolder, verbose=False,save_to_file=False):
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nNetwork scanning...")
+    print("+"*50 + "\nNetwork scanning...")
     networkArtifact = "Windows.Network.Scan"
     query = f"Select * from Artifact.{networkArtifact}()"
     output = Run_velociraptor_query(query)
@@ -16,6 +16,7 @@ def network_module(outputFolder, verbose=False,save_to_file=False):
     currentPid = eval(Run_velociraptor_query("select Pid from pslist(pid=getpid())"))[0]['Pid']
     if check_connect():
         for i in parsed:
+            if i['DestIP'] == '127.0.0.1': continue
             check = check_virustotal("check_ip", i['DestIP'])
             if i['Pid'] == currentPid: continue 
             if check == 1:

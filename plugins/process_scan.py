@@ -2,7 +2,7 @@ from core.velociraptor_sever_api import Run_velociraptor_query
 
 
 def process_module( verbose=False):
-    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nProcesses scanning...")
+    print("+"*50 + "\nProcesses scanning...")
     artifact = "Windows.Memory.LocalHollowsHunter"
     query = "select * from Artifact.{}()".format(artifact)
     Run_velociraptor_query(query)
