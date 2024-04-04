@@ -18,7 +18,7 @@ artifacts = get_registry_yaml_files(folder_path)
 
 
 def registry_module(outputFolder, verbose=False, save_to_file=False):
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nRegistry scanning...")
+    print("+"*50 + "\nRegistry scanning...")
     query = ""
     result = []
     for artifact in artifacts:
@@ -32,10 +32,10 @@ def registry_module(outputFolder, verbose=False, save_to_file=False):
             print("Path: " + i['ValueName'] + "\n" + "Value:" + str(i['Contents']) + "\n")
     if save_to_file:
         filepath = os.path.join(outputFolder,"Registry_module.json")
-        with open(filepath, 'w') as f:
+        with open(filepath, 'w', encoding='utf-8-sig') as f:
             json.dump(result,f,indent=4)
             print(f"Saved Registry module output at {filepath}")
-    print("Scan Registry hives completed.")
+    print("Scan Registry hives completed")
     return result
 
 

@@ -2,13 +2,13 @@ from core.velociraptor_sever_api import Run_velociraptor_query
 import json
 
 def event_log_module(verbose=False):
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nEventLogs scanning...")
+    print("+"*50 + "\nEventLogs scanning...")
     artifact = "Windows.EventLogs.LocalHayabusa"
     query = "select * from Artifact.{}()".format(artifact)
     Run_velociraptor_query(query)
     result = []
     filepath = ".\\output\\event-log-module-output.jsonl"
-    with open(filepath,"r",encoding='latin-1') as file:
+    with open(filepath,"r",encoding='utf-8-sig') as file:
         for line in file:
             result.append(json.loads(line))
     if verbose:

@@ -80,7 +80,7 @@ def parse_WMI_output(consumer_dict):
     return consumer_list
 
 def wmi_module(inputFolder, outputFolder = None, verbose=False, savefile=False):
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nWMI scanning...")
+    print("+"*50 + "\nWMI scanning...")
     """Main function for everything!"""
 
     # print("\n    Enumerating FilterToConsumerBindings...")

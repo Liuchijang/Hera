@@ -108,7 +108,7 @@ def collect_necessary_evtx(outputFolder, verbose=False):
                 shutil.move(source, dest)
 
 def collect_evtx_file(outputFolder, verbose=False):
-    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nCollecting all evtx files...")
+    print("+"*50 + "\nCollecting all evtx files...")
     system_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/System/File"
     application_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Application/File"
     security_log_key_path = "HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services/EventLog/Security/File"
@@ -139,7 +139,7 @@ def collect_evtx_file(outputFolder, verbose=False):
     print(f"Collecting completed, saved at folder {outputFolder}")
 
 def collect_OBJECT_DATA(outputFolder,verbose=False):
-    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nCollecting WMI Repository...")
+    print("+"*50 + "\nCollecting WMI Repository...")
     query = "SELECT Name, OSPath, Size as RawSize, humanize(bytes=Size) as Size, Mode.String, Mtime FROM glob(globs='C:/Windows/system32/wbem/Repository/**/OBJECTS.DATA',accessor='ntfs')"
     output = Run_velociraptor_query(query)
     parsed = eval(output)
@@ -152,7 +152,7 @@ def collect_OBJECT_DATA(outputFolder,verbose=False):
         if verbose: print(f"Collect {source} successfully, saved at {dest}")
         source = os.path.join(os.getcwd(),filename)
         shutil.move(source, dest)
-    print(f"Collecting completed, saved at folder {outputFolder}")
+    print(f"Collecting completed")
 
 def collect_system_info():
     data = Run_velociraptor_query("SELECT * From info()")
