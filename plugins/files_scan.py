@@ -45,6 +45,7 @@ def check_file(file):
     if check_connect():
         #whitelisting known legit executable
         if parsed[0]['MD5'] == "eaec6dadcb123b00ea52655510d0b4d6": return 0
+        print(f"Checking file: {parsed[0]['OSPath']}\n\tHash: {parsed[0]['MD5']}")
         check = check_virustotal("check_hash", parsed[0]['MD5'])
         if check == 1 or parsed[0]['Trust'] != "trusted":
             return 1
