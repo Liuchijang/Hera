@@ -110,6 +110,78 @@ def malware_table(malware_instances):
     """
     return html
 
+def high_alert_table(eventlog):
+
+    html = """
+    <table width="100%" id="alert-table">
+        <tbody>
+            <tr>
+                <th id="Alert" colspan="2">Alert</th>
+            </tr>
+    """
+    list = []
+    for event in eventlog:
+        s = ""
+        for key in event:
+            s += f"{key}: {event[key]}\n"
+        list.append(s)
+
+    for index, i in enumerate(list):
+        html += """
+            <tr>
+                <td class="alert-key">
+                    <div>Alert {}</div>
+                </td>
+                <td class="value">
+                    <div class="field-group">
+                        <pre>{}</pre>
+                    </div>
+                </td>
+            </tr>
+        """.format(index+1, i)
+
+    html += """
+        </tbody>
+    </table>
+    """
+    return html
+
+def sus_files_table(files):
+
+    html = """
+    <table width="100%" id="files-table">
+        <tbody>
+            <tr>
+                <th id="Files" colspan="2">Suspicious files</th>
+            </tr>
+    """
+    list = []
+    for file in files:
+        s = ""
+        for key in file:
+            s += f"{key}: {file[key]}\n"
+        list.append(s)
+
+    for index, i in enumerate(list):
+        html += """
+            <tr>
+                <td class="file-key">
+                    <div>Suspicious File {}</div>
+                </td>
+                <td class="value">
+                    <div class="field-group">
+                        <pre>{}</pre>
+                    </div>
+                </td>
+            </tr>
+        """.format(index+1, i)
+
+    html += """
+        </tbody>
+    </table>
+    """
+    return html
+
 
 def report_form(
             computerName, 
@@ -122,7 +194,9 @@ def report_form(
             startTime, 
             endTime,
             scanID,
-            malware_instances
+            malware_instances,
+            log_high_alert,
+            sus_files
         ):
     html_content = '''
     <!DOCTYPE html>
@@ -164,6 +238,8 @@ def report_form(
                         scanID
                     )
     html_content += malware_table(malware_instances)
+    html_content += high_alert_table(log_high_alert)
+    html_content += sus_files_table(sus_files)
     html_content += '''
             </body>
         </html>    
