@@ -18,8 +18,8 @@ sources:
         "C:\\Windows\\System\\*",
         "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\**",
         "C:\\Windows\\System32\\Tasks\\**",
-        "C:\\Users\\*\\AppData\\Local\\**",
-        // "C:\\Users\\*\\AppData\\Roaming\\**",
+        "C:\\Users\\*\\AppData\\Local\\*\\*",
+        "C:\\Users\\*\\AppData\\Roaming\\*\\*",
         // "C:\\Program Files\\**",
         // "C:\\Program Files (x86)\\**"
         )

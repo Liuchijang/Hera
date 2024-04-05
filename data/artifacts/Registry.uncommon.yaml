@@ -10,6 +10,8 @@ parameters:
         $ = /C:\\Program Files \(x86\)\\.*\.exe/
         $ = /C:\\Program Files\\.*\.exe/
         $ =  /C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\[^\\]+\\MsMpEng.exe/
+        $ = "cmd.exe"
+        $ = "explorer.exe"
         condition:
         not any of them
       }
