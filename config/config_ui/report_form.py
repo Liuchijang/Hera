@@ -22,7 +22,7 @@ def info_table(
                 </tr>
                 <tr>
                     <td>Version</td>
-                    <td>1</td>
+                    <td>hera-1.0.0</td>
                 </tr>
                 <tr>
                     <td>Computer Name</td>
