@@ -5,6 +5,8 @@ from plugins.files_scan import check_file
 
 malware_instances = []
 malware_instances_res = []
+log_high_alert = []
+sus_files = []
 
 def event_id_8(event_log, proc):
     result = []
@@ -340,6 +342,12 @@ def matching(event_log, process, network, registry, wmi,files=None):
     print("+"*50 + "\nPerforming the matching process...")
     global malware_instances 
     global malware_instances_res
+    global log_high_alert
+    global sus_files
+    for event in event_log:
+        if event['Level'] == 'high':
+            log_high_alert.append(event)
+    if files: sus_files = files
     reg_temp = []
     for i in registry:
         temp = eval(str(i).replace("null","0")\

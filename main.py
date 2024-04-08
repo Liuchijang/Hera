@@ -14,6 +14,17 @@ from plugins.files_scan import fileScan_module
 from plugins.wmi import wmi_module
 from core.condition import *
 from core.matching import matching
+import json
+
+def clear_output_folder(check, output_folder_path):
+    if check: return 0
+    for root, dirs, files in os.walk(output_folder_path):
+        for file in files:
+                file_path = os.path.join(root, file)
+                os.remove(file_path)
+        for dir in dirs:
+                dir_path = os.path.join(root, dir)
+                shutil.rmtree(dir_path)
 
 if __name__ == "__main__":    
         logo_filepath = ".\\data\\art\\logo.txt"
@@ -47,17 +58,56 @@ if __name__ == "__main__":
                 collect_system_info()
                 collect_OBJECT_DATA(extractFolder,args.verbose)
                 wmiOutput = wmi_module(extractFolder,outputFolder,args.verbose,args.save)
+                networkOutput = network_module(outputFolder,args.verbose,args.save)
+                regOutput = registry_module(outputFolder,args.verbose,args.save)
                 if args.collect:
                         collect_evtx_file(extractFolder,args.verbose)
                 eventLogOutput = event_log_module(args.verbose)
                 processOutput = process_module(args.verbose)
-                networkOutput = network_module(outputFolder,args.verbose,args.save)
-                regOutput = registry_module(outputFolder,args.verbose,args.save)
+                # # Initializing input for testing
+                # outputFolder = "output"
+                # networkOutput = []
+                # eventLogOutput = []
+                # regOutput = []
+                # fileOutput = []
+                # processOutput = []
+
+                # filepath = ".\\output\\Network_module.json"
+                # with open(filepath,"r",encoding='utf-8-sig') as f:
+                #         networkOutput = eval(f.read())
+                # f.close()
+
+                # filepath = ".\\output\\HollowsHunter\\summary.json"
+                # with open(filepath,"r",encoding='utf-8-sig') as f:
+                #         processOutput = eval(f.read())
+                # f.close()
+
+                # filepath = ".\\output\\Files_module.json"
+                # with open(filepath,"r",encoding='utf-8-sig') as f:
+                #         fileOutput = eval(f.read())
+                # f.close()
+
+                # filepath = ".\\output\\Registry_module.json"
+                # with open(filepath,"r",encoding='utf-8-sig') as f:
+                #         # Normalizing Registry key path
+                #         regOutput = eval(f.read().replace("null","0")\
+                #                         .replace("HKEY_LOCAL_MACHINE","HKLM")\
+                #                         .replace("HKEY_CLASSES_ROOT","HKCR")\
+                #                         .replace("HKEY_CURRENT_USER","HKCU")\
+                #                         .replace("HKEY_USERS","HKU")\
+                #                         .replace("HKEY_CURRENT_CONFIG","HKCC"))
+                # f.close()
+                
+                # filepath = ".\\output\\event-log-module-output.jsonl"
+                # with open(filepath,"r",encoding='utf-8-sig') as file:
+                #         for line in file:
+                #                 eventLogOutput.append(json.loads(line))
                 if args.fast:
                         matching(eventLogOutput,processOutput, networkOutput, regOutput, wmiOutput)
                 else:
                         fileOutput = fileScan_module(outputFolder,args.verbose,args.save)
-                        matching(eventLogOutput,processOutput, networkOutput, regOutput, wmiOutput, fileOutput)
+                        matching(eventLogOutput,processOutput, networkOutput, regOutput, wmiOutput, fileOutput)                      
+                clear_output_folder(args.save, outputFolder)
                 create_report()
         except KeyboardInterrupt:
                 print("User cancelled the operation.")
@@ -68,4 +118,4 @@ if __name__ == "__main__":
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # Optional: hide window
                 process = subprocess.Popen(["taskkill", "/F", "/T", "/PID", str(server.pid)], startupinfo=startupinfo)
                 process.wait()
-                print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                print("+"*100)
