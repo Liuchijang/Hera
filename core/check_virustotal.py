@@ -1,7 +1,7 @@
 import requests
 # mode: check_hash | check_ip
 def check_virustotal(mode, value):
-    api_url = f'https://fastapivirustotal-production.up.railway.app/{mode}/{value}'
+    api_url = f'https://herati.up.railway.app/{mode}/{value}'
     try:
         response = requests.get(api_url, timeout=5)
         if response.status_code == 200:
@@ -17,7 +17,7 @@ def check_virustotal(mode, value):
         return 0
 
 def check_connect():
-    url = "https://fastapivirustotal-production.up.railway.app"
+    url = "https://herati.up.railway.app/"
     try:
       response = requests.get(url, timeout=5)
       response.raise_for_status()  # Raise an exception for non-2xx status codes
