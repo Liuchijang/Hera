@@ -340,15 +340,12 @@ def creat_object(process_tree, event_log, process, network):
 
 def matching(event_log, process, network, registry, wmi,files=None):
     print("+"*50 + "\nPerforming the matching process...")
-    global malware_instances 
+    global malware_instances
     global malware_instances_res
     global log_high_alert
     global sus_files
-    for event in event_log:
-        if event['Level'] == 'high':
-            log_high_alert.append(event)
-    if files: sus_files = files
     reg_temp = []
+
     for i in registry:
         temp = eval(str(i).replace("null","0")\
             .replace("HKEY_LOCAL_MACHINE","HKLM")\
@@ -388,3 +385,7 @@ def matching(event_log, process, network, registry, wmi,files=None):
     for i in malware_instances_res:
         i.display()
         print("")
+    for event in event_log:
+        if event['Level'] == 'high':
+            log_high_alert.append(event)
+    if files: sus_files = files
